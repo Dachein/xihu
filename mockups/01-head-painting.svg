@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  西湖 · 山水底盘 · v0 头画 (head painting)
+  目的：验证视觉调性 — 水墨写意 / 山水画抽象 / 现代极简
+  这是矢量稿，最终会用 react-three-fiber 实现为可交互 3D 场景
+  视角：东南向西北俯视，约 45° 倾角
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500"
+     style="background:#f5f1e8" font-family="'Noto Serif SC','Songti SC',STSong,serif">
+  <defs>
+    <!-- 纸面纹理 -->
+    <filter id="paper" x="0" y="0" width="1" height="1">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/>
+      <feColorMatrix values="0 0 0 0 0.95   0 0 0 0 0.92   0 0 0 0 0.86   0 0 0 0.06 0"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+
+    <!-- 水墨晕染 -->
+    <filter id="wash" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="washSoft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+
+    <!-- 山体渐变：远山淡，近山浓 -->
+    <linearGradient id="hillFar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#c8bfb1" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#a39a8b" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="hillMid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#7a7268" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#4a443d" stop-opacity="0.45"/>
+    </linearGradient>
+    <linearGradient id="hillNear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#3a342d" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#1c1916" stop-opacity="0.6"/>
+    </linearGradient>
+
+    <!-- 湖面：银白哑光 -->
+    <radialGradient id="lake" cx="0.5" cy="0.45" r="0.6">
+      <stop offset="0%"  stop-color="#eae6dc"/>
+      <stop offset="60%" stop-color="#d4cfc2"/>
+      <stop offset="100%" stop-color="#b5af9f"/>
+    </radialGradient>
+
+    <!-- 湖面波纹 -->
+    <pattern id="ripple" x="0" y="0" width="40" height="20" patternUnits="userSpaceOnUse">
+      <path d="M0 10 Q 10 6, 20 10 T 40 10" stroke="#9c9685" stroke-width="0.4"
+            fill="none" opacity="0.35"/>
+    </pattern>
+  </defs>
+
+  <!-- 纸面底 -->
+  <rect width="1200" height="1500" fill="#f5f1e8"/>
+  <rect width="1200" height="1500" filter="url(#paper)"/>
+
+  <!-- ============== 标题区 ============== -->
+  <g transform="translate(80,120)">
+    <text font-size="84" fill="#1c1916" letter-spacing="8">西湖</text>
+    <text y="40" font-size="11" fill="#7a7268"
+          letter-spacing="6" font-family="ui-sans-serif,system-ui">XIHU · 山水底盘</text>
+    <line x1="0" y1="60" x2="60" y2="60" stroke="#1c1916" stroke-width="1"/>
+    <text y="92" font-size="13" fill="#4a443d" font-style="italic">
+      一个 AI native 的西湖漫游引导
+    </text>
+  </g>
+
+  <text x="1120" y="120" font-size="11" fill="#7a7268" letter-spacing="3"
+        text-anchor="end" font-family="ui-sans-serif,system-ui">v0 · head painting</text>
+  <text x="1120" y="138" font-size="10" fill="#a39a8b" letter-spacing="2"
+        text-anchor="end" font-family="ui-sans-serif,system-ui">2026.05.10</text>
+
+  <!-- ============== 山水主图 ============== -->
+  <g transform="translate(0,180)">
+
+    <!-- 远山（西侧）：北高峰、南高峰 —— 最淡 -->
+    <g filter="url(#washSoft)">
+      <path d="M 80 480 Q 220 280, 340 360 Q 420 280, 540 380
+               Q 600 340, 660 400 L 660 600 L 80 600 Z"
+            fill="url(#hillFar)"/>
+    </g>
+
+    <!-- 中景山（南北）：宝石山 / 南屏 / 夕照 -->
+    <g filter="url(#wash)">
+      <!-- 宝石山（北岸） -->
+      <path d="M 380 540 Q 480 460, 560 510 Q 620 480, 700 530
+               Q 780 510, 860 540 L 860 620 L 380 620 Z"
+            fill="url(#hillMid)"/>
+      <!-- 南屏 / 夕照（南岸） -->
+      <path d="M 240 990 Q 360 920, 460 960 Q 560 900, 660 950
+               Q 780 920, 900 970 L 900 1080 L 240 1080 Z"
+            fill="url(#hillMid)"/>
+    </g>
+
+    <!-- 近景山（东南余脉，画面前景） -->
+    <g filter="url(#wash)">
+      <path d="M 0 1140 Q 200 1080, 400 1100 Q 600 1060, 820 1090
+               Q 1000 1080, 1200 1100 L 1200 1200 L 0 1200 Z"
+            fill="url(#hillNear)"/>
+    </g>
+
+    <!-- ============== 湖面 ============== -->
+    <!-- 外西湖主体（长椭圆，南北向） -->
+    <g>
+      <path d="M 360 620
+               Q 320 700, 330 820
+               Q 340 940, 410 990
+               Q 540 1010, 660 990
+               Q 780 970, 830 880
+               Q 860 760, 820 660
+               Q 720 620, 600 615
+               Q 480 615, 360 620 Z"
+            fill="url(#lake)"/>
+      <!-- 波纹叠层 -->
+      <path d="M 360 620
+               Q 320 700, 330 820
+               Q 340 940, 410 990
+               Q 540 1010, 660 990
+               Q 780 970, 830 880
+               Q 860 760, 820 660
+               Q 720 620, 600 615
+               Q 480 615, 360 620 Z"
+            fill="url(#ripple)" opacity="0.6"/>
+    </g>
+
+    <!-- 苏堤：南北贯通湖西，带轻微弯曲 -->
+    <path d="M 410 990 Q 420 800, 440 660"
+          stroke="#3a342d" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <!-- 苏堤六桥（沿堤的小节点） -->
+    <g fill="#1c1916">
+      <circle cx="416" cy="950" r="2.2"/>
+      <circle cx="421" cy="900" r="2.2"/>
+      <circle cx="426" cy="850" r="2.2"/>
+      <circle cx="430" cy="800" r="2.2"/>
+      <circle cx="434" cy="745" r="2.2"/>
+      <circle cx="438" cy="690" r="2.2"/>
+    </g>
+
+    <!-- 白堤：东西向，跨北侧 -->
+    <path d="M 600 615 Q 660 625, 720 640" stroke="#3a342d" stroke-width="1.6"
+          fill="none" stroke-linecap="round"/>
+    <!-- 断桥点 -->
+    <circle cx="600" cy="615" r="2.8" fill="#1c1916"/>
+
+    <!-- 孤山：白堤西端的小山 -->
+    <ellipse cx="555" cy="640" rx="38" ry="14" fill="#7a7268" opacity="0.55" filter="url(#wash)"/>
+
+    <!-- 三潭印月：南湖中三个小点（三角排布） -->
+    <g fill="#1c1916">
+      <circle cx="620" cy="900" r="3"/>
+      <circle cx="650" cy="918" r="3"/>
+      <circle cx="635" cy="935" r="3"/>
+      <circle cx="635" cy="912" r="14" fill="none" stroke="#7a7268"
+              stroke-width="0.4" opacity="0.5"/>
+    </g>
+
+    <!-- 湖心亭 -->
+    <circle cx="590" cy="800" r="2.6" fill="#1c1916"/>
+
+    <!-- 阮公墩 -->
+    <circle cx="550" cy="760" r="2.2" fill="#1c1916"/>
+
+    <!-- ============== 塔标 ============== -->
+    <!-- 雷峰塔（南岸夕照山）：垂直短笔，带阴影代表高度 -->
+    <g transform="translate(700,950)">
+      <line x1="0" y1="-44" x2="0" y2="0" stroke="#1c1916" stroke-width="2"/>
+      <line x1="-5" y1="-44" x2="5" y2="-44" stroke="#1c1916" stroke-width="2"/>
+      <line x1="-3" y1="-30" x2="3" y2="-30" stroke="#1c1916" stroke-width="1"/>
+      <line x1="-3" y1="-16" x2="3" y2="-16" stroke="#1c1916" stroke-width="1"/>
+      <line x1="-1.5" y1="0" x2="22" y2="6" stroke="#7a7268" stroke-width="0.5" opacity="0.5"/>
+    </g>
+
+    <!-- 保俶塔（北岸宝石山）：更细，对望 -->
+    <g transform="translate(620,560)">
+      <line x1="0" y1="-38" x2="0" y2="0" stroke="#1c1916" stroke-width="1.4"/>
+      <line x1="-3" y1="-38" x2="3" y2="-38" stroke="#1c1916" stroke-width="1.4"/>
+      <line x1="-1" y1="0" x2="-12" y2="5" stroke="#7a7268" stroke-width="0.5" opacity="0.5"/>
+    </g>
+
+    <!-- 雷峰 ↔ 保俶 对望虚线 -->
+    <line x1="700" y1="950" x2="620" y2="560" stroke="#7a7268"
+          stroke-width="0.5" stroke-dasharray="2,4" opacity="0.45"/>
+
+    <!-- ============== 标注 ============== -->
+    <g font-size="13" fill="#1c1916" letter-spacing="1">
+      <!-- 北高峰 -->
+      <text x="200" y="380">北高峰</text>
+      <line x1="240" y1="385" x2="280" y2="420" stroke="#7a7268" stroke-width="0.4"/>
+      <!-- 南高峰 -->
+      <text x="120" y="500">南高峰</text>
+      <line x1="170" y1="505" x2="220" y2="500" stroke="#7a7268" stroke-width="0.4"/>
+      <!-- 宝石山 / 保俶塔 -->
+      <text x="640" y="520">保俶塔</text>
+      <line x1="635" y1="525" x2="624" y2="540" stroke="#7a7268" stroke-width="0.4"/>
+      <!-- 苏堤 -->
+      <text x="350" y="820" text-anchor="end">苏堤</text>
+      <line x1="356" y1="817" x2="408" y2="815" stroke="#7a7268" stroke-width="0.4"/>
+      <!-- 白堤 -->
+      <text x="700" y="600">白堤</text>
+      <line x1="700" y1="605" x2="680" y2="618" stroke="#7a7268" stroke-width="0.4"/>
+      <!-- 孤山 -->
+      <text x="475" y="635" text-anchor="end">孤山</text>
+      <line x1="480" y1="635" x2="525" y2="640" stroke="#7a7268" stroke-width="0.4"/>
+      <!-- 三潭印月 -->
+      <text x="690" y="930">三潭印月</text>
+      <line x1="685" y1="925" x2="660" y2="918" stroke="#7a7268" stroke-width="0.4"/>
+      <!-- 湖心亭 -->
+      <text x="540" y="795" text-anchor="end">湖心亭</text>
+      <line x1="545" y1="797" x2="585" y2="800" stroke="#7a7268" stroke-width="0.4"/>
+      <!-- 雷峰塔 -->
+      <text x="730" y="970">雷峰塔</text>
+      <line x1="728" y1="965" x2="708" y2="950" stroke="#7a7268" stroke-width="0.4"/>
+      <!-- 南屏 -->
+      <text x="420" y="1020">南屏山</text>
+      <line x1="465" y1="1020" x2="500" y2="1010" stroke="#7a7268" stroke-width="0.4"/>
+    </g>
+
+    <!-- 此刻锚点（AI 副驾的"现在你在这里"） -->
+    <g transform="translate(600,615)">
+      <circle r="6" fill="none" stroke="#1c1916" stroke-width="1">
+        <animate attributeName="r" values="6;14;6" dur="2.4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="1;0;1" dur="2.4s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="3.5" fill="#1c1916"/>
+    </g>
+    <text x="615" y="600" font-size="10" fill="#1c1916" letter-spacing="2"
+          font-family="ui-sans-serif,system-ui">NOW · 断桥</text>
+
+    <!-- 印章式落款 -->
+    <g transform="translate(1080,1140)">
+      <rect x="-26" y="-26" width="52" height="52" fill="none" stroke="#8a3a2a" stroke-width="2"/>
+      <text font-size="12" fill="#8a3a2a" text-anchor="middle" y="-6"
+            letter-spacing="1">西湖</text>
+      <text font-size="10" fill="#8a3a2a" text-anchor="middle" y="12"
+            letter-spacing="1" font-family="ui-sans-serif,system-ui">V0</text>
+    </g>
+  </g>
+
+  <!-- ============== 底部诗题 + 图例 ============== -->
+  <g transform="translate(80,1380)">
+    <text font-size="22" fill="#1c1916" letter-spacing="3" font-style="italic">
+      水光潋滟晴方好，山色空濛雨亦奇。
+    </text>
+    <text y="28" font-size="11" fill="#7a7268" letter-spacing="2">—— 苏轼《饮湖上初晴后雨》</text>
+  </g>
+
+  <g transform="translate(820,1380)" font-size="10" fill="#4a443d"
+     font-family="ui-sans-serif,system-ui" letter-spacing="2">
+    <g>
+      <line x1="0" y1="0" x2="20" y2="0" stroke="#1c1916" stroke-width="1.6"/>
+      <text x="28" y="3">堤</text>
+      <circle cx="78" cy="0" r="2.5" fill="#1c1916"/>
+      <text x="88" y="3">桥/亭</text>
+      <line x1="160" y1="0" x2="160" y2="-12" stroke="#1c1916" stroke-width="1.4"/>
+      <text x="170" y="3">塔</text>
+    </g>
+    <g transform="translate(0,18)">
+      <line x1="0" y1="0" x2="20" y2="0" stroke="#7a7268" stroke-width="0.5" stroke-dasharray="2,4"/>
+      <text x="28" y="3">视线/对望</text>
+      <circle cx="118" cy="0" r="3" fill="none" stroke="#1c1916" stroke-width="1"/>
+      <text x="128" y="3">此刻锚点</text>
+    </g>
+  </g>
+</svg>
