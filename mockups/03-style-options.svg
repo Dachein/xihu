@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  西湖 · 山水底盘 · 风格对照
+  四种候选方向，每格画"同一处一角"——一座山 + 湖 + 一塔
+  目的：让我们看到同一处地理结构在不同表达下的差别
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1480"
+     style="background:#f5f1e8" font-family="'Noto Serif SC','Songti SC',STSong,serif">
+  <defs>
+    <filter id="paper" x="0" y="0" width="1" height="1">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/>
+      <feColorMatrix values="0 0 0 0 0.95   0 0 0 0 0.92   0 0 0 0 0.86   0 0 0 0.06 0"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+
+    <!-- A: low-poly 面 -->
+    <linearGradient id="loA1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a342d"/><stop offset="1" stop-color="#5a544c"/>
+    </linearGradient>
+    <linearGradient id="loA2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a7268"/><stop offset="1" stop-color="#928a7d"/>
+    </linearGradient>
+    <linearGradient id="loA3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b5ad9f"/><stop offset="1" stop-color="#cdc6b8"/>
+    </linearGradient>
+
+    <!-- B: 水墨写意 brush -->
+    <filter id="brushRough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7"/>
+      <feDisplacementMap in="SourceGraphic" scale="6"/>
+    </filter>
+    <filter id="washB" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+    <linearGradient id="inkB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#1c1916" stop-opacity="0.85"/>
+      <stop offset="0.7" stop-color="#3a342d" stop-opacity="0.5"/>
+      <stop offset="1"   stop-color="#7a7268" stop-opacity="0.15"/>
+    </linearGradient>
+
+    <!-- D: clay/mass 软体 -->
+    <radialGradient id="clayD" cx="0.35" cy="0.3" r="0.85">
+      <stop offset="0"   stop-color="#dad3c4"/>
+      <stop offset="0.5" stop-color="#807868"/>
+      <stop offset="1"   stop-color="#2a251f"/>
+    </radialGradient>
+    <radialGradient id="lakeD" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0"   stop-color="#e5e1d6"/>
+      <stop offset="1"   stop-color="#a6a094"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="1480" fill="#f5f1e8"/>
+  <rect width="1280" height="1480" filter="url(#paper)"/>
+
+  <!-- 顶部标题 -->
+  <g transform="translate(80,90)">
+    <text font-size="44" fill="#1c1916" letter-spacing="6">山水底盘 · 风格对照</text>
+    <text y="32" font-size="11" fill="#7a7268" letter-spacing="4"
+          font-family="ui-sans-serif,system-ui">FOUR DIRECTIONS · same hill / lake / pagoda</text>
+    <line x1="0" y1="50" x2="50" y2="50" stroke="#1c1916"/>
+  </g>
+  <text x="1200" y="100" font-size="11" fill="#7a7268" letter-spacing="3"
+        text-anchor="end" font-family="ui-sans-serif,system-ui">v0 · style study</text>
+
+  <!-- ============================================ -->
+  <!-- A · low-poly 黑白几何                          -->
+  <!-- ============================================ -->
+  <g transform="translate(80,180)">
+    <rect width="540" height="540" fill="#efe9dc" stroke="#d6cdba" stroke-width="0.6"/>
+
+    <!-- 山：分面三角化 -->
+    <g transform="translate(40,80)">
+      <!-- 远山 -->
+      <polygon points="60,260 200,140 320,200 460,180 460,300 60,300" fill="url(#loA3)"/>
+      <!-- 中景山 -->
+      <polygon points="20,330 110,210 210,250 290,180 380,260 460,230 460,360 20,360" fill="url(#loA2)"/>
+      <polygon points="110,210 200,260 290,180" fill="#928a7d"/>
+      <polygon points="200,260 290,180 380,260" fill="#7a7268"/>
+      <!-- 近山 -->
+      <polygon points="0,400 80,300 160,360 240,310 340,360 460,330 460,420 0,420" fill="url(#loA1)"/>
+      <polygon points="80,300 160,360 240,310" fill="#3a342d"/>
+      <polygon points="240,310 340,360 460,330" fill="#2a251f"/>
+    </g>
+
+    <!-- 湖 -->
+    <rect x="40" y="500" width="460" height="20" fill="#1c1916"/>
+    <rect x="40" y="498" width="460" height="2" fill="#5a544c"/>
+
+    <!-- 塔 -->
+    <g transform="translate(330,300)">
+      <line x1="0" y1="0" x2="0" y2="-50" stroke="#1c1916" stroke-width="2.5"/>
+      <line x1="-6" y1="-50" x2="6" y2="-50" stroke="#1c1916" stroke-width="2.5"/>
+      <line x1="-3" y1="-32" x2="3" y2="-32" stroke="#1c1916" stroke-width="1.4"/>
+    </g>
+
+    <!-- 标签 -->
+    <g transform="translate(20,40)">
+      <text font-size="20" fill="#1c1916" letter-spacing="2">A</text>
+      <text x="32" y="-2" font-size="20" fill="#1c1916" letter-spacing="2">低多边形 黑白</text>
+      <text x="32" y="14" font-size="10" fill="#7a7268" letter-spacing="2"
+            font-family="ui-sans-serif,system-ui">low-poly · facets · sharp shadow</text>
+    </g>
+    <g transform="translate(20,490)" font-family="ui-sans-serif,system-ui">
+      <text font-size="9" fill="#4a443d" letter-spacing="1.5">引擎</text>
+      <text x="28" font-size="9" fill="#1c1916" letter-spacing="1">Three.js / R3F · flat-shaded mesh</text>
+      <text y="14" font-size="9" fill="#4a443d" letter-spacing="1.5">气质</text>
+      <text x="28" y="14" font-size="9" fill="#1c1916" letter-spacing="1">现代、几何、冷峻 / Monument Valley</text>
+      <text y="28" font-size="9" fill="#4a443d" letter-spacing="1.5">移动</text>
+      <text x="28" y="28" font-size="9" fill="#1c1916" letter-spacing="1">极佳 · 三角面少 · 阴影硬一次出</text>
+    </g>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- B · 水墨写意 painterly                        -->
+  <!-- ============================================ -->
+  <g transform="translate(660,180)">
+    <rect width="540" height="540" fill="#efe9dc" stroke="#d6cdba" stroke-width="0.6"/>
+
+    <!-- 远山 -->
+    <g filter="url(#washB)">
+      <path d="M 60 280 Q 180 180 280 230 Q 380 170 460 240 L 460 320 L 60 320 Z"
+            fill="url(#inkB)" opacity="0.4"/>
+    </g>
+    <!-- 中山 笔触感 -->
+    <g filter="url(#brushRough)">
+      <path d="M 30 360 Q 140 250 240 320 Q 340 220 460 320 L 460 400 L 30 400 Z"
+            fill="url(#inkB)" opacity="0.7"/>
+    </g>
+    <!-- 近山 浓墨 -->
+    <g filter="url(#brushRough)">
+      <path d="M 20 440 Q 130 360 240 410 Q 360 340 480 420 L 480 500 L 20 500 Z"
+            fill="#1c1916" opacity="0.85"/>
+    </g>
+    <!-- 飞白笔（亮处留白） -->
+    <path d="M 90 440 L 130 410 M 200 430 L 260 400" stroke="#efe9dc"
+          stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+
+    <!-- 湖：淡淡两笔 -->
+    <path d="M 40 510 Q 270 504 500 510" stroke="#7a7268" stroke-width="0.8" fill="none"/>
+    <path d="M 80 520 Q 270 516 460 520" stroke="#7a7268" stroke-width="0.5" fill="none" opacity="0.6"/>
+
+    <!-- 塔（细线） -->
+    <g transform="translate(340,360)">
+      <line x1="0" y1="0" x2="0" y2="-48" stroke="#1c1916" stroke-width="1.4"/>
+      <line x1="-5" y1="-48" x2="5" y2="-48" stroke="#1c1916" stroke-width="1.4"/>
+    </g>
+
+    <g transform="translate(20,40)">
+      <text font-size="20" fill="#1c1916" letter-spacing="2">B</text>
+      <text x="32" y="-2" font-size="20" fill="#1c1916" letter-spacing="2">水墨写意</text>
+      <text x="32" y="14" font-size="10" fill="#7a7268" letter-spacing="2"
+            font-family="ui-sans-serif,system-ui">painterly · brush stroke · dry-wet</text>
+    </g>
+    <g transform="translate(20,490)" font-family="ui-sans-serif,system-ui">
+      <text font-size="9" fill="#4a443d" letter-spacing="1.5">引擎</text>
+      <text x="28" font-size="9" fill="#1c1916" letter-spacing="1">Three.js + 自定义 shader（笔触贴图 / NPR）</text>
+      <text y="14" font-size="9" fill="#4a443d" letter-spacing="1.5">气质</text>
+      <text x="28" y="14" font-size="9" fill="#1c1916" letter-spacing="1">古、湿润、文气 / 难控制不沦为"老气"</text>
+      <text y="28" font-size="9" fill="#4a443d" letter-spacing="1.5">移动</text>
+      <text x="28" y="28" font-size="9" fill="#1c1916" letter-spacing="1">中 · NPR shader 较重 · 需调优</text>
+    </g>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- C · 等高线浮雕                                -->
+  <!-- ============================================ -->
+  <g transform="translate(80,760)">
+    <rect width="540" height="540" fill="#efe9dc" stroke="#d6cdba" stroke-width="0.6"/>
+
+    <!-- 远山等高线 -->
+    <g stroke="#7a7268" fill="none" stroke-width="0.6">
+      <path d="M 80 290 Q 180 230 280 260 Q 380 220 440 270" />
+      <path d="M 90 300 Q 180 240 280 270 Q 380 230 430 280" />
+      <path d="M 100 310 Q 180 250 280 280 Q 380 240 420 290" />
+    </g>
+    <!-- 中山 -->
+    <g stroke="#4a443d" fill="none" stroke-width="0.7">
+      <path d="M 50 380 Q 160 280 240 330 Q 340 250 460 320" />
+      <path d="M 60 388 Q 160 290 240 338 Q 340 260 460 328" />
+      <path d="M 70 396 Q 160 300 240 346 Q 340 270 460 336" />
+      <path d="M 80 404 Q 160 310 240 354 Q 340 280 460 344" />
+      <path d="M 90 412 Q 160 320 240 362 Q 340 290 460 352" />
+    </g>
+    <!-- 近山 -->
+    <g stroke="#1c1916" fill="none" stroke-width="0.9">
+      <path d="M 20 480 Q 130 400 240 440 Q 360 380 510 450" />
+      <path d="M 30 488 Q 130 410 240 448 Q 360 390 510 458" />
+      <path d="M 40 496 Q 130 420 240 456 Q 360 400 510 466" />
+      <path d="M 50 504 Q 130 430 240 464 Q 360 410 510 474" />
+    </g>
+
+    <!-- 湖：水平细线 -->
+    <g stroke="#1c1916" fill="none" stroke-width="0.6" opacity="0.7">
+      <line x1="40" y1="514" x2="500" y2="514"/>
+    </g>
+    <g stroke="#7a7268" fill="none" stroke-width="0.4" opacity="0.6">
+      <line x1="60"  y1="520" x2="480" y2="520"/>
+      <line x1="80"  y1="525" x2="460" y2="525"/>
+      <line x1="100" y1="530" x2="440" y2="530"/>
+    </g>
+
+    <!-- 塔（同样细线语言） -->
+    <g transform="translate(340,400)" stroke="#1c1916" stroke-width="0.8" fill="none">
+      <line x1="0" y1="0" x2="0" y2="-48"/>
+      <line x1="-5" y1="-48" x2="5" y2="-48"/>
+      <line x1="-3" y1="-32" x2="3" y2="-32"/>
+      <line x1="-3" y1="-16" x2="3" y2="-16"/>
+    </g>
+
+    <g transform="translate(20,40)">
+      <text font-size="20" fill="#1c1916" letter-spacing="2">C</text>
+      <text x="32" y="-2" font-size="20" fill="#1c1916" letter-spacing="2">等高线浮雕</text>
+      <text x="32" y="14" font-size="10" fill="#7a7268" letter-spacing="2"
+            font-family="ui-sans-serif,system-ui">contour · linework only · topographic</text>
+    </g>
+    <g transform="translate(20,490)" font-family="ui-sans-serif,system-ui">
+      <text font-size="9" fill="#4a443d" letter-spacing="1.5">引擎</text>
+      <text x="28" font-size="9" fill="#1c1916" letter-spacing="1">SVG / Canvas2D · WebGL contour shader 也可</text>
+      <text y="14" font-size="9" fill="#4a443d" letter-spacing="1.5">气质</text>
+      <text x="28" y="14" font-size="9" fill="#1c1916" letter-spacing="1">智性、克制、工程师气 / 但"在山中"较弱</text>
+      <text y="28" font-size="9" fill="#4a443d" letter-spacing="1.5">移动</text>
+      <text x="28" y="28" font-size="9" fill="#1c1916" letter-spacing="1">极轻 · 无 GPU 也跑得动</text>
+    </g>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- D · 抽象体块 clay/mass                        -->
+  <!-- ============================================ -->
+  <g transform="translate(660,760)">
+    <rect width="540" height="540" fill="#efe9dc" stroke="#d6cdba" stroke-width="0.6"/>
+
+    <!-- 远山：扁平柔体 -->
+    <ellipse cx="200" cy="290" rx="160" ry="38" fill="#bcb29f" opacity="0.6"/>
+    <ellipse cx="380" cy="280" rx="120" ry="32" fill="#a89e8a" opacity="0.55"/>
+
+    <!-- 中山 -->
+    <path d="M 60 380 Q 100 260 180 280 Q 260 200 340 270 Q 420 220 470 320 L 470 400 L 60 400 Z"
+          fill="url(#clayD)"/>
+    <!-- 中山高光 -->
+    <path d="M 100 350 Q 150 270 210 300" stroke="#e5e1d6" stroke-width="1.4"
+          fill="none" opacity="0.6" stroke-linecap="round"/>
+    <!-- 中山阴影 -->
+    <path d="M 280 280 Q 360 220 440 320" stroke="#1c1916" stroke-width="0.8"
+          fill="none" opacity="0.4" stroke-linecap="round"/>
+
+    <!-- 近山 -->
+    <path d="M 0 480 Q 80 380 200 420 Q 320 350 440 410 Q 510 380 540 410 L 540 510 L 0 510 Z"
+          fill="url(#clayD)"/>
+
+    <!-- 湖：哑光镜面 -->
+    <ellipse cx="270" cy="525" rx="240" ry="14" fill="url(#lakeD)"/>
+    <ellipse cx="270" cy="525" rx="240" ry="14" fill="none" stroke="#7a7268" stroke-width="0.4" opacity="0.4"/>
+    <line x1="50" y1="528" x2="490" y2="528" stroke="#fff" opacity="0.5" stroke-width="0.4"/>
+
+    <!-- 塔：小体块 -->
+    <g transform="translate(335,300)">
+      <rect x="-3" y="-50" width="6" height="50" fill="#1c1916"/>
+      <polygon points="-7,-50 7,-50 0,-58" fill="#1c1916"/>
+    </g>
+
+    <g transform="translate(20,40)">
+      <text font-size="20" fill="#1c1916" letter-spacing="2">D</text>
+      <text x="32" y="-2" font-size="20" fill="#1c1916" letter-spacing="2">抽象体块</text>
+      <text x="32" y="14" font-size="10" fill="#7a7268" letter-spacing="2"
+            font-family="ui-sans-serif,system-ui">clay mass · soft form · matcap</text>
+    </g>
+    <g transform="translate(20,490)" font-family="ui-sans-serif,system-ui">
+      <text font-size="9" fill="#4a443d" letter-spacing="1.5">引擎</text>
+      <text x="28" font-size="9" fill="#1c1916" letter-spacing="1">Three.js + matcap shader / 平滑曲面</text>
+      <text y="14" font-size="9" fill="#4a443d" letter-spacing="1.5">气质</text>
+      <text x="28" y="14" font-size="9" fill="#1c1916" letter-spacing="1">静、雕塑、冥想 / 比 A 软，比 B 现代</text>
+      <text y="28" font-size="9" fill="#4a443d" letter-spacing="1.5">移动</text>
+      <text x="28" y="28" font-size="9" fill="#1c1916" letter-spacing="1">优 · matcap 极省 · 一次贴图搞定光照</text>
+    </g>
+  </g>
+
+  <!-- 底部说明 -->
+  <g transform="translate(80,1370)" font-family="ui-sans-serif,system-ui">
+    <text font-size="11" fill="#1c1916" letter-spacing="2"
+          font-family="'Noto Serif SC',serif">"我行在山中" 的关键不在风格，而在镜头</text>
+    <text y="18" font-size="9" fill="#4a443d" letter-spacing="1.5">
+      ABCD 都可以让镜头从俯视降到接近地平线，让山有遮挡、让前后景拉开。风格决定肌理，镜头决定身体感。
+    </text>
+    <text y="36" font-size="9" fill="#4a443d" letter-spacing="1.5">
+      默认推荐：A（low-poly 黑白）—— 与产品调性最一致，引擎最稳，可在 A 上叠加少量 B 的笔触贴图融合。
+    </text>
+  </g>
+</svg>
