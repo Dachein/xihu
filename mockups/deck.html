@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>西湖 · v0 风格提案</title>
+<style>
+:root{
+  --paper:#f5f1e8; --ink:#1c1916; --mid:#4a443d;
+  --soft:#7a7268; --faint:#a39a8b; --seal:#8a3a2a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--paper);color:var(--ink);
+  font-family:'PingFang SC','Noto Serif SC','Songti SC',STSong,serif;
+  -webkit-font-smoothing:antialiased;overflow:hidden}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.06;
+  background-image:repeating-radial-gradient(circle at 20% 30%,#000 0,#000 .5px,transparent .5px,transparent 4px),
+    repeating-radial-gradient(circle at 70% 80%,#000 0,#000 .4px,transparent .4px,transparent 5px);
+  mix-blend-mode:multiply;z-index:0
+}
+.deck{position:relative;width:100vw;height:100vh;overflow:hidden;z-index:1}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start;padding:48px 32px 96px;
+  opacity:0;pointer-events:none;transition:opacity .45s ease;overflow:auto}
+.slide.active{opacity:1;pointer-events:auto}
+.head{width:100%;max-width:880px;display:flex;align-items:baseline;
+  justify-content:space-between;margin-bottom:24px;
+  border-bottom:1px solid rgba(28,25,22,.15);padding-bottom:10px}
+.head .t{font-size:14px;letter-spacing:4px;color:var(--ink)}
+.head .n{font-family:ui-sans-serif,system-ui;font-size:11px;
+  letter-spacing:3px;color:var(--soft)}
+.frame{flex:1 1 auto;display:flex;align-items:center;justify-content:center;
+  width:100%;max-width:880px;min-height:0;padding:8px 0}
+.frame img{max-width:100%;max-height:100%;width:auto;height:auto;
+  filter:drop-shadow(0 16px 36px rgba(28,25,22,.12))}
+.cap{margin-top:18px;font-size:12px;color:var(--soft);letter-spacing:1.5px;
+  font-family:ui-sans-serif,system-ui;text-align:center;max-width:680px}
+
+.cover{justify-content:center}
+.cover .big{font-size:18vmin;letter-spacing:14px;line-height:1;font-weight:400}
+.cover .sub{margin-top:32px;font-size:14px;letter-spacing:6px;color:var(--soft);
+  font-family:ui-sans-serif,system-ui}
+.cover .meta{margin-top:14px;font-size:10px;letter-spacing:4px;color:var(--faint);
+  font-family:ui-sans-serif,system-ui}
+.cover .rule{width:60px;height:1px;background:var(--ink);margin:40px 0 24px}
+.cover .quote{font-style:italic;font-size:16px;color:var(--mid);letter-spacing:3px}
+.cover .hint{margin-top:80px;font-size:11px;letter-spacing:3px;color:var(--faint);
+  font-family:ui-sans-serif,system-ui}
+
+.outro{justify-content:flex-start;align-items:flex-start;padding-top:80px}
+.outro .body{width:100%;max-width:680px;margin:0 auto}
+.outro h2{font-size:36px;letter-spacing:6px;margin-bottom:8px;font-weight:400}
+.outro .sub{font-size:12px;letter-spacing:3px;color:var(--soft);
+  font-family:ui-sans-serif,system-ui;margin-bottom:36px}
+.outro ul{list-style:none}
+.outro li{padding:14px 0;border-bottom:1px solid rgba(28,25,22,.08);
+  display:flex;align-items:baseline;gap:20px}
+.outro li:last-child{border-bottom:none}
+.outro li .k{flex:0 0 80px;font-size:11px;letter-spacing:3px;color:var(--soft);
+  font-family:ui-sans-serif,system-ui;text-align:right}
+.outro li .v{font-size:14px;color:var(--ink);line-height:1.6}
+.outro li .v em{font-style:italic;color:var(--mid)}
+
+.seal{position:fixed;top:24px;right:24px;width:48px;height:48px;
+  border:2px solid var(--seal);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;color:var(--seal);z-index:10}
+.seal .l1{font-size:12px;letter-spacing:1px}
+.seal .l2{font-size:8px;letter-spacing:1px;font-family:ui-sans-serif,system-ui;margin-top:1px}
+
+.nav{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:16px;z-index:10;user-select:none}
+.nav button{background:transparent;border:1px solid rgba(28,25,22,.25);
+  color:var(--ink);width:36px;height:36px;border-radius:50%;cursor:pointer;
+  font-size:14px;display:flex;align-items:center;justify-content:center;
+  font-family:ui-sans-serif,system-ui;transition:background .2s}
+.nav button:hover{background:rgba(28,25,22,.06)}
+.nav button:disabled{opacity:.25;cursor:not-allowed}
+.nav .c{font-family:ui-sans-serif,system-ui;font-size:11px;letter-spacing:3px;
+  color:var(--soft);min-width:64px;text-align:center}
+
+.tap{position:fixed;top:0;bottom:80px;width:30%;z-index:5;cursor:pointer}
+.tap.l{left:0}.tap.r{right:0}
+
+@media(max-width:640px){
+  .slide{padding:32px 16px 96px}
+  .head{margin-bottom:16px;padding-bottom:8px}
+  .head .t{font-size:12px;letter-spacing:2px}
+  .cover .big{font-size:26vmin;letter-spacing:8px}
+  .cover .sub{font-size:11px;letter-spacing:4px}
+  .outro h2{font-size:24px;letter-spacing:4px}
+  .outro li .k{flex:0 0 56px;font-size:10px}
+  .outro li .v{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="seal"><span class="l1">西湖</span><span class="l2">V0</span></div>
+
+<div class="deck">
+  <section class="slide cover active">
+    <div class="big">西湖</div>
+    <div class="sub">XIHU · 山水底盘</div>
+    <div class="meta">v0 风格提案 · 2026.05.10</div>
+    <div class="rule"></div>
+    <div class="quote">为什么这个点存在？地理 × 时间 × 文化</div>
+    <div class="hint">→ 或点击右侧前进 · 共 5 页</div>
+  </section>
+
+  <section class="slide">
+    <div class="head"><span class="t">头画 · 山水底盘的视觉调性</span><span class="n">01 / 04</span></div>
+    <div class="frame"><img src="https://cloud.huozi.app/p/yw8wxk6cbw" alt="head painting"></div>
+    <div class="cap">纸面 · 远中近三层山 · 湖 · 苏白二堤 · 三潭 · 雷峰 ↔ 保俶 对望</div>
+  </section>
+
+  <section class="slide">
+    <div class="head"><span class="t">景 = 域 + 视点 + 视线 + 条件</span><span class="n">02 / 04</span></div>
+    <div class="frame"><img src="https://cloud.huozi.app/p/yd86sthycd" alt="scene as field"></div>
+    <div class="cap">三个范例：断桥残雪（局部场域 + 天气）／雷峰夕照（视线主导）／三潭印月（水上场域 + 月夜）</div>
+  </section>
+
+  <section class="slide">
+    <div class="head"><span class="t">4 种 3D 风格对照</span><span class="n">03 / 04</span></div>
+    <div class="frame"><img src="https://cloud.huozi.app/p/tnfdagumra" alt="style options"></div>
+    <div class="cap">A 低多边形 · B 水墨写意 · C 等高线 · D 抽象体块 ／ "我行在山中"在镜头，不在风格</div>
+  </section>
+
+  <section class="slide outro">
+    <div class="head"><span class="t">推荐 + 下一步</span><span class="n">04 / 04</span></div>
+    <div class="body">
+      <h2>方向</h2>
+      <div class="sub">RECOMMENDATION · NEXT STEPS</div>
+      <ul>
+        <li><span class="k">风格</span><span class="v">A（low-poly 黑白）作底，叠加少量 B 笔触贴图作纹理 — <em>现代几何 + 墨韵</em></span></li>
+        <li><span class="k">引擎</span><span class="v">react-three-fiber + drei + postprocessing — <em>≈ 200KB gzip · 移动端 60fps</em></span></li>
+        <li><span class="k">镜头</span><span class="v">默认斜俯视 60°，可压低到接近地平线，让前山遮挡后山 — <em>"走进山里"的核心</em></span></li>
+        <li><span class="k">数据</span><span class="v">三层：山水底盘 / 实体（景点容器） / 景（域+视点+视线+条件）</span></li>
+        <li><span class="k">第一步</span><span class="v">搭 R3F 场景骨架：湖 + 5–7 山 + 二堤 + 三岛 + 4 塔，用 mock 坐标</span></li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<div class="tap l" onclick="prev()"></div>
+<div class="tap r" onclick="next()"></div>
+
+<div class="nav">
+  <button class="prev" onclick="prev()" aria-label="prev">←</button>
+  <span class="c">1 / 5</span>
+  <button class="next" onclick="next()" aria-label="next">→</button>
+</div>
+
+<script>
+const slides=document.querySelectorAll('.slide');
+const counter=document.querySelector('.nav .c');
+const prevBtn=document.querySelector('.prev');
+const nextBtn=document.querySelector('.next');
+let i=0;
+function show(n){
+  i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+  counter.textContent=(i+1)+' / '+slides.length;
+  prevBtn.disabled=i===0;
+  nextBtn.disabled=i===slides.length-1;
+  history.replaceState(null,'','#'+(i+1));
+}
+function next(){show(i+1)}
+function prev(){show(i-1)}
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next()}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev()}
+  else if(e.key==='Home'){show(0)}
+  else if(e.key==='End'){show(slides.length-1)}
+});
+let tx=0;
+addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>50)(dx<0?next:prev)();
+},{passive:true});
+const h=parseInt(location.hash.slice(1))-1;
+show(isNaN(h)?0:h);
+</script>
+</body>
+</html>
