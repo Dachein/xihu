@@ -1,0 +1,125 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "west_lake",
+        "parent_id": null,
+        "name": "西湖",
+        "name_en": "West Lake",
+        "entity_kind": "water",
+        "elevation_m": 10,
+        "confidence": "draft",
+        "summary": "西湖文化景观的水体核心，三面云山一面城。",
+        "tags": "lake cultural-landscape unesco"
+      },
+      "geometry": { "type": "Point", "coordinates": [120.138, 30.244] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "beigaofeng",
+        "parent_id": "region_lingyin_beigaofeng",
+        "name": "北高峰",
+        "name_en": "Bei Gaofeng",
+        "entity_kind": "mountain",
+        "elevation_m": 314,
+        "confidence": "draft",
+        "summary": "西湖北侧重要山峰，连接灵隐、财神庙及多条山径。",
+        "tags": "ridge peak trail"
+      },
+      "geometry": { "type": "Point", "coordinates": [120.094, 30.259] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "lingyin_temple",
+        "parent_id": "region_lingyin_beigaofeng",
+        "name": "灵隐寺",
+        "name_en": "Lingyin Temple",
+        "entity_kind": "temple",
+        "elevation_m": 48,
+        "confidence": "draft",
+        "summary": "西湖西侧山谷中的佛教文化核心，与飞来峰、北高峰山域相连。",
+        "tags": "temple buddhism valley"
+      },
+      "geometry": { "type": "Point", "coordinates": [120.101, 30.240] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "longjing_village",
+        "parent_id": "region_longjing_jiuxi",
+        "name": "龙井",
+        "name_en": "Longjing",
+        "entity_kind": "village",
+        "elevation_m": 78,
+        "confidence": "draft",
+        "summary": "茶文化与山谷路径交汇区域，连接九溪、满觉陇、翁家山。",
+        "tags": "tea valley village"
+      },
+      "geometry": { "type": "Point", "coordinates": [120.101, 30.219] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "jiuxi",
+        "parent_id": "region_longjing_jiuxi",
+        "name": "九溪",
+        "name_en": "Jiuxi",
+        "entity_kind": "water",
+        "elevation_m": 40,
+        "confidence": "draft",
+        "summary": "西湖南部山水溪谷，适合承载水系、古道和茶山路径数据。",
+        "tags": "creek valley trail"
+      },
+      "geometry": { "type": "Point", "coordinates": [120.107, 30.195] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "wuyunshan",
+        "parent_id": "region_longjing_jiuxi",
+        "name": "五云山",
+        "name_en": "Wuyunshan",
+        "entity_kind": "mountain",
+        "elevation_m": 334,
+        "confidence": "draft",
+        "summary": "西湖南部山脊节点，未来可作为十里琅珰等路线高程校验点。",
+        "tags": "peak ridge trail"
+      },
+      "geometry": { "type": "Point", "coordinates": [120.087, 30.186] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "yuhuangshan",
+        "parent_id": "region_wushan_yuhuang",
+        "name": "玉皇山",
+        "name_en": "Yuhuangshan",
+        "entity_kind": "mountain",
+        "elevation_m": 237,
+        "confidence": "draft",
+        "summary": "西湖南缘山体节点，向东联系吴山，向西联系虎跑、满觉陇。",
+        "tags": "peak ridge view"
+      },
+      "geometry": { "type": "Point", "coordinates": [120.151, 30.213] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "baoshishan",
+        "parent_id": "region_west_lake_core",
+        "name": "宝石山",
+        "name_en": "Baoshi Hill",
+        "entity_kind": "mountain",
+        "elevation_m": 78,
+        "confidence": "draft",
+        "summary": "西湖北岸山体，保俶塔和湖城视线关系的重要节点。",
+        "tags": "hill pagoda view"
+      },
+      "geometry": { "type": "Point", "coordinates": [120.146, 30.264] }
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f241e" />
+    <title>西湖山水图谱</title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <div id="map" aria-label="西湖山水动态地图"></div>
+
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <div>
+            <p>西湖山水图谱</p>
+            <span id="camera-state">3D terrain</span>
+          </div>
+        </div>
+        <div class="icon-row">
+          <button class="icon-button" id="locate-btn" type="button" aria-label="定位">
+            <i data-lucide="crosshair"></i>
+          </button>
+          <button class="icon-button" id="reset-btn" type="button" aria-label="复位视角">
+            <i data-lucide="rotate-ccw"></i>
+          </button>
+        </div>
+      </header>
+
+      <section class="modebar" aria-label="地图模式">
+        <button class="mode-chip active" data-mode="terrain" type="button">
+          <i data-lucide="mountain"></i>
+          <span>地形</span>
+        </button>
+        <button class="mode-chip" data-mode="culture" type="button">
+          <i data-lucide="landmark"></i>
+          <span>文化</span>
+        </button>
+        <button class="mode-chip" data-mode="trail" type="button">
+          <i data-lucide="route"></i>
+          <span>山径</span>
+        </button>
+      </section>
+
+      <aside class="layer-panel" aria-label="图层">
+        <button class="layer-toggle active" data-layer="satellite" type="button">
+          <i data-lucide="satellite"></i>
+          <span>实景</span>
+        </button>
+        <button class="layer-toggle" data-layer="atlas" type="button">
+          <i data-lucide="map"></i>
+          <span>图册</span>
+        </button>
+        <button class="layer-toggle active" data-layer="regions" type="button">
+          <i data-lucide="shapes"></i>
+          <span>片区</span>
+        </button>
+        <button class="layer-toggle active" data-layer="trails" type="button">
+          <i data-lucide="footprints"></i>
+          <span>路径</span>
+        </button>
+      </aside>
+
+      <section class="sheet" id="sheet" aria-label="实体列表">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow">Cultural terrain</p>
+            <h1 id="sheet-title">西湖文化地点</h1>
+          </div>
+          <button class="icon-button" id="sheet-toggle" type="button" aria-label="展开或收起">
+            <i data-lucide="chevron-up"></i>
+          </button>
+        </div>
+
+        <div class="search-row">
+          <i data-lucide="search"></i>
+          <input id="entity-search" type="search" placeholder="搜索地点、山径、片区" autocomplete="off" />
+        </div>
+
+        <div class="detail-card" id="detail-card">
+          <p class="muted">选择地图上的地点或路径</p>
+        </div>
+
+        <div class="entity-list" id="entity-list"></div>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.js"></script>
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>

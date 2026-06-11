@@ -1,0 +1,66 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "trail_lingyin_beigaofeng",
+        "name": "灵隐至北高峰",
+        "trail_kind": "ridge",
+        "confidence": "draft",
+        "color": "#e6563f",
+        "summary": "示意山径。后续需要以官方步道和实地 GPS 轨迹校正。"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.101, 30.24],
+          [120.096, 30.246],
+          [120.093, 30.253],
+          [120.094, 30.259]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "trail_longjing_jiuxi_wuyun",
+        "name": "龙井九溪五云山",
+        "trail_kind": "ridge",
+        "confidence": "draft",
+        "color": "#f0714f",
+        "summary": "示意茶山与溪谷路径骨架，用于承载后续 GPS/海拔轨迹。"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.101, 30.219],
+          [120.102, 30.209],
+          [120.107, 30.195],
+          [120.095, 30.188],
+          [120.087, 30.186]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "trail_yuhuang_wushan",
+        "name": "玉皇山至吴山",
+        "trail_kind": "ridge",
+        "confidence": "draft",
+        "color": "#d7b760",
+        "summary": "示意南线山体联络路径。"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.151, 30.213],
+          [120.158, 30.222],
+          [120.166, 30.231],
+          [120.171, 30.238]
+        ]
+      }
+    }
+  ]
+}
