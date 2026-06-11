@@ -343,6 +343,26 @@ h1 {
   font-weight: 700;
 }
 
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.text-button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(246, 231, 193, 0.28);
+  border-radius: 8px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.text-button:active {
+  transform: translateY(1px);
+}
+
 .muted {
   color: var(--muted);
 }

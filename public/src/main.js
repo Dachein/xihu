@@ -16,11 +16,24 @@ const DATA_URLS = {
   trails: "data/trail-lines.geojson",
 };
 
+const EMPTY_FEATURE_COLLECTION = {
+  type: "FeatureCollection",
+  features: [],
+};
+
+const ENTRY_SOURCE_LABELS = {
+  gps: "GPS",
+  click: "地图点",
+  share: "分享",
+  view: "视角",
+};
+
 const state = {
   regions: null,
   entities: [],
   trails: [],
   selectedId: null,
+  entryPoint: null,
   uiBound: false,
   domainLayersAdded: false,
 };
@@ -36,7 +49,7 @@ const map = new maplibregl.Map({
   minZoom: 10.7,
   maxZoom: 17,
   maxPitch: 82,
-  hash: true,
+  hash: false,
   attributionControl: false,
   localIdeographFontFamily:
     '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif',
@@ -215,6 +228,10 @@ function addDomainLayers() {
       features: state.trails,
     },
   });
+  map.addSource("entry-point", {
+    type: "geojson",
+    data: EMPTY_FEATURE_COLLECTION,
+  });
 
   map.addLayer({
     id: "region-fill",
@@ -291,6 +308,50 @@ function addDomainLayers() {
   });
 
   map.addLayer({
+    id: "entry-halo",
+    type: "circle",
+    source: "entry-point",
+    paint: {
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 16, 15, 28],
+      "circle-color": "#f3d177",
+      "circle-opacity": 0.18,
+      "circle-stroke-color": "#fff3c6",
+      "circle-stroke-opacity": 0.42,
+      "circle-stroke-width": 1.4,
+    },
+  });
+
+  map.addLayer({
+    id: "entry-dot",
+    type: "circle",
+    source: "entry-point",
+    paint: {
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 6, 15, 10],
+      "circle-color": "#d44f37",
+      "circle-stroke-color": "#fff1cf",
+      "circle-stroke-width": 2.2,
+    },
+  });
+
+  map.addLayer({
+    id: "entry-label",
+    type: "symbol",
+    source: "entry-point",
+    layout: {
+      "text-field": ["get", "label"],
+      "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 15, 15],
+      "text-offset": [0, 1.35],
+      "text-anchor": "top",
+      "text-font": ["Open Sans Regular"],
+    },
+    paint: {
+      "text-color": "#4a261c",
+      "text-halo-color": "#f4eacb",
+      "text-halo-width": 1.7,
+    },
+  });
+
+  map.addLayer({
     id: "entity-dots",
     type: "circle",
     source: "entities",
@@ -336,7 +397,7 @@ function addDomainLayers() {
   map.on("click", "entity-dots", (event) => selectFeature(event.features[0]));
   map.on("click", "trail-line", (event) => selectFeature(event.features[0]));
 
-  ["entity-dots", "trail-line"].forEach((layer) => {
+  ["entity-dots", "trail-line", "entry-dot"].forEach((layer) => {
     map.on("mouseenter", layer, () => {
       map.getCanvas().style.cursor = "pointer";
     });
@@ -345,6 +406,11 @@ function addDomainLayers() {
     });
   });
 
+  map.on("click", "entry-dot", () => {
+    if (state.entryPoint) renderEntryPoint(state.entryPoint);
+  });
+
+  syncEntryPointLayer();
 }
 
 function bindUi() {
@@ -357,13 +423,27 @@ function bindUi() {
   document.getElementById("locate-btn").addEventListener("click", () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition((position) => {
-      map.flyTo({
-        center: [position.coords.longitude, position.coords.latitude],
-        zoom: 15,
-        pitch: 68,
-        duration: 900,
+      setEntryPoint({
+        lng: position.coords.longitude,
+        lat: position.coords.latitude,
+        elevationM: position.coords.altitude,
+        accuracyM: position.coords.accuracy,
+        source: "gps",
       });
     });
+  });
+
+  document.getElementById("share-view-btn").addEventListener("click", () => {
+    const center = map.getCenter();
+    setEntryPoint(
+      {
+        lng: center.lng,
+        lat: center.lat,
+        source: "view",
+      },
+      { flyTo: false, writeUrl: true },
+    );
+    shareEntryPoint();
   });
 
   document.getElementById("sheet-toggle").addEventListener("click", () => {
@@ -395,6 +475,17 @@ function bindUi() {
   document.querySelectorAll(".mode-chip").forEach((button) => {
     button.addEventListener("click", () => setMode(button));
   });
+
+  map.on("click", (event) => {
+    if (clickedDomainFeature(event.point)) return;
+    setEntryPoint({
+      lng: event.lngLat.lng,
+      lat: event.lngLat.lat,
+      source: "click",
+    });
+  });
+
+  restoreEntryPointFromUrl();
 }
 
 function toggleLayer(button) {
@@ -444,6 +535,12 @@ function setVisibility(layerId, visible) {
   }
 }
 
+function clickedDomainFeature(point) {
+  const layers = ["entity-dots", "trail-line", "entry-dot"].filter((layer) => map.getLayer(layer));
+  if (!layers.length) return false;
+  return map.queryRenderedFeatures(point, { layers }).length > 0;
+}
+
 function renderEntityList(features) {
   const list = document.getElementById("entity-list");
   list.innerHTML = "";
@@ -475,6 +572,7 @@ function selectFeature(feature) {
     duration: 750,
   });
 
+  document.getElementById("sheet-title").textContent = "西湖文化地点";
   const parent = feature.properties.parent_id ? `<span class="meta-pill">${feature.properties.parent_id}</span>` : "";
   document.getElementById("detail-card").innerHTML = `
     <h2>${feature.properties.name}</h2>
@@ -485,6 +583,210 @@ function selectFeature(feature) {
       <span class="meta-pill">${feature.properties.confidence || "draft"}</span>
     </div>
   `;
+}
+
+function setEntryPoint(input, options = {}) {
+  const lng = Number(input.lng);
+  const lat = Number(input.lat);
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+
+  const elevation = getElevationEstimate(lng, lat, input.elevationM);
+  const point = {
+    lng,
+    lat,
+    elevationM: elevation.value,
+    elevationConfidence: elevation.confidence,
+    accuracyM: Number.isFinite(input.accuracyM) ? Math.round(input.accuracyM) : null,
+    source: input.source || "click",
+    time: input.time || new Date().toISOString(),
+    camera: {
+      zoom: input.zoom || Math.max(map.getZoom(), 15.1),
+      pitch: input.pitch ?? 68,
+      bearing: input.bearing ?? map.getBearing(),
+    },
+  };
+
+  state.entryPoint = point;
+  syncEntryPointLayer();
+  renderEntryPoint(point);
+
+  if (options.writeUrl !== false) writeEntryPointToUrl(point);
+  if (options.flyTo !== false) {
+    moveToEntryPoint(point, { animate: false });
+  }
+}
+
+function moveToEntryPoint(point, options = {}) {
+  const camera = {
+    center: [point.lng, point.lat],
+    zoom: point.camera.zoom,
+    pitch: point.camera.pitch,
+    bearing: point.camera.bearing,
+  };
+
+  if (options.animate === false) {
+    map.jumpTo(camera);
+  } else {
+    map.easeTo({ ...camera, duration: 700 });
+  }
+  window.setTimeout(updateCameraState, 0);
+}
+
+function getElevationEstimate(lng, lat, explicitElevation) {
+  if (Number.isFinite(explicitElevation)) {
+    return { value: Math.round(explicitElevation), confidence: "gps" };
+  }
+
+  try {
+    if (typeof map.queryTerrainElevation === "function") {
+      const elevation = map.queryTerrainElevation([lng, lat], { exaggerated: false });
+      if (Number.isFinite(elevation)) {
+        return { value: Math.round(elevation), confidence: "dem" };
+      }
+    }
+  } catch (_error) {
+    // Terrain tiles may still be loading; keep the point usable without elevation.
+  }
+
+  return { value: null, confidence: "unknown" };
+}
+
+function syncEntryPointLayer() {
+  const source = map.getSource("entry-point");
+  if (!source) return;
+
+  const feature = state.entryPoint
+    ? {
+        type: "Feature",
+        properties: {
+          label: "观察点",
+          source: state.entryPoint.source,
+          elevation_m: state.entryPoint.elevationM,
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [state.entryPoint.lng, state.entryPoint.lat],
+        },
+      }
+    : null;
+
+  source.setData({
+    type: "FeatureCollection",
+    features: feature ? [feature] : [],
+  });
+}
+
+function renderEntryPoint(point) {
+  const elevationText = Number.isFinite(point.elevationM) ? `${point.elevationM} m` : "等待 DEM";
+  const accuracyText = Number.isFinite(point.accuracyM) ? `±${point.accuracyM} m` : "未标注精度";
+  const sourceText = ENTRY_SOURCE_LABELS[point.source] || point.source;
+  const timeText = formatEntryTime(point.time);
+
+  document.getElementById("sheet-title").textContent = "山中观察点";
+  document.getElementById("detail-card").innerHTML = `
+    <h2>观察点</h2>
+    <p>经纬度 ${point.lng.toFixed(5)}, ${point.lat.toFixed(5)}。这是一个可分享、可回到的西湖山水视角入口。</p>
+    <div class="meta-line">
+      <span class="meta-pill">${sourceText}</span>
+      <span class="meta-pill">海拔 ${elevationText}</span>
+      <span class="meta-pill">${accuracyText}</span>
+      <span class="meta-pill">${timeText}</span>
+    </div>
+    <div class="detail-actions">
+      <button class="text-button" id="recenter-entry-btn" type="button">回到此点</button>
+      <button class="text-button" id="share-entry-btn" type="button">分享入口</button>
+    </div>
+  `;
+
+  document.getElementById("recenter-entry-btn")?.addEventListener("click", () => {
+    moveToEntryPoint(point, { animate: true });
+  });
+  document.getElementById("share-entry-btn")?.addEventListener("click", shareEntryPoint);
+}
+
+function writeEntryPointToUrl(point) {
+  const url = buildEntryPointUrl(point);
+  window.history.replaceState(null, "", url);
+}
+
+function buildEntryPointUrl(point) {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.searchParams.set("lng", point.lng.toFixed(6));
+  url.searchParams.set("lat", point.lat.toFixed(6));
+  url.searchParams.set("source", point.source);
+  url.searchParams.set("z", point.camera.zoom.toFixed(2));
+  url.searchParams.set("pitch", Math.round(point.camera.pitch));
+  url.searchParams.set("bearing", Math.round(point.camera.bearing));
+  if (Number.isFinite(point.elevationM)) url.searchParams.set("ele", String(point.elevationM));
+  url.searchParams.set("t", point.time);
+  return url.toString();
+}
+
+function restoreEntryPointFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("lng") || !params.has("lat")) return;
+
+  const lng = Number(params.get("lng"));
+  const lat = Number(params.get("lat"));
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+
+  setEntryPoint(
+    {
+      lng,
+      lat,
+      source: params.get("source") || "share",
+      elevationM: params.has("ele") ? Number(params.get("ele")) : undefined,
+      time: params.get("t") || undefined,
+      zoom: Number(params.get("z")) || undefined,
+      pitch: Number(params.get("pitch")) || undefined,
+      bearing: Number(params.get("bearing")) || undefined,
+    },
+    { writeUrl: false },
+  );
+
+  window.setTimeout(() => {
+    if (!state.entryPoint) return;
+    moveToEntryPoint(state.entryPoint, { animate: false });
+  }, 600);
+}
+
+async function shareEntryPoint() {
+  if (!state.entryPoint) return;
+  const url = buildEntryPointUrl(state.entryPoint);
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "西湖山水观察点", url });
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(url);
+      flashCameraState("入口已复制");
+    }
+  } catch (_error) {
+    flashCameraState("分享未完成");
+  }
+}
+
+function flashCameraState(text) {
+  const camera = document.getElementById("camera-state");
+  if (!camera) return;
+  const previous = camera.textContent;
+  camera.textContent = text;
+  window.setTimeout(() => {
+    camera.textContent = previous;
+  }, 1400);
+}
+
+function formatEntryTime(value) {
+  try {
+    return new Intl.DateTimeFormat("zh-CN", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(value));
+  } catch (_error) {
+    return "此刻";
+  }
 }
 
 function getFeatureCenter(feature) {
@@ -514,3 +816,6 @@ function updateCameraState() {
   if (!camera) return;
   camera.textContent = `${map.getZoom().toFixed(1)}z · ${Math.round(map.getPitch())}°`;
 }
+
+window.xihuDebug = { map, state, setEntryPoint, moveToEntryPoint };
+globalThis.xihuDebug = window.xihuDebug;

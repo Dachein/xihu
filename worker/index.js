@@ -32,6 +32,21 @@ export default {
       });
     }
 
+    if (url.pathname === "/api/entry-schema") {
+      return json({
+        lng: "number",
+        lat: "number",
+        elevation_m: "number | null",
+        time: "ISO-8601 string",
+        source: "gps | click | share | view",
+        camera: {
+          zoom: "number",
+          pitch: "number",
+          bearing: "number",
+        },
+      });
+    }
+
     if (DATA_ROUTES.has(url.pathname)) {
       return dataResponse(request, env, DATA_ROUTES.get(url.pathname));
     }

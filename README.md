@@ -67,3 +67,11 @@ Production should replace the external DEM source with self-hosted terrain tiles
 3. Hosting: Cloudflare R2 or Pages static tiles.
 
 See `docs/5m-dtm-procurement.md` for the procurement checklist.
+
+## Point Entry Model
+
+The map now supports entering the 3D landscape from any point. Users can tap the map, use GPS, or share the current view to create an observation point. The URL records `lng`, `lat`, `z`, `pitch`, `bearing`, `source`, `ele`, and `t`, so a mountain position can be revisited later.
+
+API schema endpoint:
+
+- `/api/entry-schema`

@@ -21,8 +21,11 @@
           </div>
         </div>
         <div class="icon-row">
-          <button class="icon-button" id="locate-btn" type="button" aria-label="定位">
+          <button class="icon-button" id="locate-btn" type="button" aria-label="定位并创建观察点">
             <i data-lucide="crosshair"></i>
+          </button>
+          <button class="icon-button" id="share-view-btn" type="button" aria-label="分享当前山水视角">
+            <i data-lucide="share-2"></i>
           </button>
           <button class="icon-button" id="reset-btn" type="button" aria-label="复位视角">
             <i data-lucide="rotate-ccw"></i>
@@ -82,7 +85,7 @@
         </div>
 
         <div class="detail-card" id="detail-card">
-          <p class="muted">选择地图上的地点或路径</p>
+          <p class="muted">点地图任意位置，创建一个可回到、可分享的山中观察点。</p>
         </div>
 
         <div class="entity-list" id="entity-list"></div>
@@ -91,6 +94,6 @@
 
     <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
     <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.js"></script>
-    <script type="module" src="src/main.js"></script>
+    <script type="module" src="src/main.js?v=point-entry-20260611d"></script>
   </body>
 </html>
