@@ -31,6 +31,7 @@ const ENTRY_SOURCE_LABELS = {
 
 const CAMERA_CONTROL_STEP_METERS = 45;
 const CAMERA_CONTROL_DURATION = 240;
+const DESKTOP_CONTROL_QUERY = "(min-width: 780px)";
 
 const state = {
   regions: null,
@@ -243,12 +244,13 @@ function addDomainLayers() {
     id: "region-fill",
     type: "fill",
     source: "regions",
+    filter: selectedFeatureFilter(),
     paint: {
       "fill-color": [
         "match",
         ["get", "entity_kind"],
         "water",
-        "#5fb2b5",
+        "#8bb7aa",
         "mountain",
         ["coalesce", ["get", "color"], "#75995a"],
         ["coalesce", ["get", "color"], "#8f9f64"],
@@ -257,7 +259,7 @@ function addDomainLayers() {
         "match",
         ["get", "entity_kind"],
         "water",
-        0.58,
+        0.12,
         "mountain",
         0.42,
         0.32,
@@ -269,6 +271,7 @@ function addDomainLayers() {
     id: "region-edge-soft",
     type: "line",
     source: "regions",
+    filter: selectedFeatureFilter(),
     paint: {
       "line-color": ["coalesce", ["get", "color"], "#ad9c63"],
       "line-width": ["interpolate", ["linear"], ["zoom"], 10, 9, 15, 18],
@@ -281,6 +284,7 @@ function addDomainLayers() {
     id: "region-line",
     type: "line",
     source: "regions",
+    filter: selectedFeatureFilter(),
     paint: {
       "line-color": ["coalesce", ["get", "color"], "#9a8750"],
       "line-width": 1.2,
@@ -290,39 +294,15 @@ function addDomainLayers() {
   });
 
   map.addLayer({
-    id: "water-body-glow",
-    type: "fill",
-    source: "regions",
-    filter: ["==", ["get", "entity_kind"], "water"],
-    paint: {
-      "fill-color": "#8fd3c9",
-      "fill-opacity": 0.32,
-      "fill-antialias": true,
-    },
-  });
-
-  map.addLayer({
-    id: "water-body",
-    type: "fill",
-    source: "regions",
-    filter: ["==", ["get", "entity_kind"], "water"],
-    paint: {
-      "fill-color": "#61b9b8",
-      "fill-opacity": 0.62,
-      "fill-antialias": true,
-    },
-  });
-
-  map.addLayer({
     id: "water-edge",
     type: "line",
     source: "regions",
-    filter: ["==", ["get", "entity_kind"], "water"],
+    filter: selectedWaterFeatureFilter(),
     paint: {
-      "line-color": "#e7f0d2",
-      "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.2, 15, 3.2],
-      "line-opacity": 0.74,
-      "line-blur": 0.35,
+      "line-color": "#dce8cb",
+      "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.8, 15, 1.8],
+      "line-opacity": 0.38,
+      "line-blur": 1.1,
     },
   });
 
@@ -330,19 +310,19 @@ function addDomainLayers() {
     id: "water-labels",
     type: "symbol",
     source: "regions",
-    filter: ["==", ["get", "entity_kind"], "water"],
+    filter: selectedWaterFeatureFilter(),
     layout: {
       "text-field": ["get", "name"],
-      "text-size": ["interpolate", ["linear"], ["zoom"], 10, 12, 15, 18],
+      "text-size": ["interpolate", ["linear"], ["zoom"], 10, 11, 15, 15],
       "text-font": ["Open Sans Regular"],
       "text-letter-spacing": 0.02,
       "text-allow-overlap": false,
     },
     paint: {
-      "text-color": "#23575b",
+      "text-color": "#395e5a",
       "text-halo-color": "#eef0cd",
-      "text-halo-width": 1.6,
-      "text-opacity": 0.92,
+      "text-halo-width": 1.4,
+      "text-opacity": 0.72,
     },
   });
 
@@ -350,6 +330,7 @@ function addDomainLayers() {
     id: "trail-casing",
     type: "line",
     source: "trails",
+    filter: selectedFeatureFilter(),
     paint: {
       "line-color": "#f6ddad",
       "line-width": ["interpolate", ["linear"], ["zoom"], 11, 5, 15, 10],
@@ -362,6 +343,7 @@ function addDomainLayers() {
     id: "trail-line",
     type: "line",
     source: "trails",
+    filter: selectedFeatureFilter(),
     paint: {
       "line-color": ["coalesce", ["get", "color"], "#cf5b44"],
       "line-width": ["interpolate", ["linear"], ["zoom"], 11, 2.1, 15, 5.4],
@@ -418,6 +400,7 @@ function addDomainLayers() {
     id: "entity-dots",
     type: "circle",
     source: "entities",
+    filter: selectedFeatureFilter(),
     paint: {
       "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 5, 15, 9],
       "circle-color": [
@@ -442,6 +425,7 @@ function addDomainLayers() {
     id: "entity-labels",
     type: "symbol",
     source: "entities",
+    filter: selectedFeatureFilter(),
     layout: {
       "text-field": ["get", "name"],
       "text-size": ["interpolate", ["linear"], ["zoom"], 11, 11, 15, 14],
@@ -473,6 +457,7 @@ function addDomainLayers() {
     if (state.entryPoint) renderEntryPoint(state.entryPoint);
   });
 
+  syncSelectedFeatureLayers();
   syncEntryPointLayer();
 }
 
@@ -530,12 +515,19 @@ function bindUi() {
     button.addEventListener("click", () => setMode(button));
   });
 
+  document.getElementById("camera-toggle")?.addEventListener("click", () => {
+    const controls = document.getElementById("camera-controls");
+    setCameraControlsVisible(controls?.classList.contains("hidden") ?? true);
+  });
+
   document.querySelectorAll("[data-camera-action]").forEach((button) => {
     button.addEventListener("click", handleCameraControlEvent);
   });
   document.addEventListener("click", handleCameraControlEvent, true);
   document.addEventListener("pointerdown", stopCameraControlPointer, true);
   document.addEventListener("keydown", handleCameraKeydown);
+  window.addEventListener("resize", handleCameraControlsResize);
+  handleCameraControlsResize();
 
   map.on("click", (event) => {
     if (clickedDomainFeature(event.point)) return;
@@ -563,6 +555,26 @@ function setMode(button) {
   if (mode === "route") {
     map.easeTo({ pitch: 72, bearing: -48, zoom: 13.8, duration: 700 });
   }
+}
+
+function selectedFeatureFilter() {
+  return state.selectedId ? ["==", ["get", "id"], state.selectedId] : ["==", ["get", "id"], "__none__"];
+}
+
+function selectedWaterFeatureFilter() {
+  return ["all", ["==", ["get", "entity_kind"], "water"], selectedFeatureFilter()];
+}
+
+function syncSelectedFeatureLayers() {
+  if (!state.domainLayersAdded) return;
+  const selectedFilter = selectedFeatureFilter();
+  const selectedWaterFilter = selectedWaterFeatureFilter();
+  ["region-fill", "region-edge-soft", "region-line", "trail-casing", "trail-line", "entity-dots", "entity-labels"].forEach((layerId) => {
+    if (map.getLayer(layerId)) map.setFilter(layerId, selectedFilter);
+  });
+  ["water-edge", "water-labels"].forEach((layerId) => {
+    if (map.getLayer(layerId)) map.setFilter(layerId, selectedWaterFilter);
+  });
 }
 
 function clickedDomainFeature(point) {
@@ -662,6 +674,7 @@ function selectFeature(feature) {
   const type = getAddressType(feature);
   const properties = feature.properties || {};
   state.selectedId = properties.id || properties.name || null;
+  syncSelectedFeatureLayers();
   const coordinates = getFeatureCenter(feature);
   const targetZoom = type === "area" ? 13.2 : type === "route" ? 13.8 : 14.3;
   map.flyTo({
@@ -710,7 +723,6 @@ function setEntryPoint(input, options = {}) {
   state.entryPoint = point;
   syncEntryPointLayer();
   renderEntryPoint(point);
-  setCameraControlsVisible(true);
 
   if (options.writeUrl !== false) writeEntryPointToUrl(point);
   if (options.flyTo !== false) {
@@ -824,11 +836,24 @@ function updateEntryPointFromCamera(camera, source) {
   syncEntryPointLayer();
   renderEntryPoint(state.entryPoint);
   writeEntryPointToUrl(state.entryPoint);
-  setCameraControlsVisible(true);
+}
+
+function isDesktopControlViewport() {
+  return window.matchMedia(DESKTOP_CONTROL_QUERY).matches;
+}
+
+function handleCameraControlsResize() {
+  if (!isDesktopControlViewport()) setCameraControlsVisible(false);
 }
 
 function setCameraControlsVisible(visible) {
-  document.getElementById("camera-controls")?.classList.toggle("hidden", !visible);
+  const canShow = visible && isDesktopControlViewport();
+  const controls = document.getElementById("camera-controls");
+  const toggle = document.getElementById("camera-toggle");
+  controls?.classList.toggle("hidden", !canShow);
+  toggle?.classList.toggle("active", canShow);
+  toggle?.setAttribute("aria-expanded", String(canShow));
+  toggle?.setAttribute("aria-label", canShow ? "收起控制盘" : "展开控制盘");
 }
 
 function handleCameraKeydown(event) {

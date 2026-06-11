@@ -90,7 +90,8 @@ button {
 
 .brand,
 .icon-row,
-.modebar {
+.modebar,
+.camera-panel-toggle {
   pointer-events: auto;
 }
 
@@ -98,12 +99,14 @@ button {
   display: none !important;
 }
 
+.camera-panel-toggle,
+.camera-controls {
+  display: none;
+}
+
 .camera-controls {
   position: fixed;
-  right: 78px;
-  bottom: calc(236px + env(safe-area-inset-bottom));
   z-index: 5;
-  display: flex;
   align-items: center;
   gap: 8px;
   pointer-events: auto;
@@ -234,8 +237,8 @@ button {
 }
 
 .icon-button,
-.mode-chip {
-  display: inline-flex;
+.mode-chip,
+.camera-panel-toggle {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--line);
@@ -243,6 +246,11 @@ button {
   background: var(--panel);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
   backdrop-filter: blur(16px);
+}
+
+.icon-button,
+.mode-chip {
+  display: inline-flex;
 }
 
 .icon-button {
@@ -253,6 +261,7 @@ button {
 
 .icon-button svg,
 .mode-chip svg,
+.camera-panel-toggle svg,
 .search-row svg {
   width: 18px;
   height: 18px;
@@ -277,7 +286,8 @@ button {
   color: var(--muted);
 }
 
-.mode-chip.active {
+.mode-chip.active,
+.camera-panel-toggle.active {
   color: #07120f;
   border-color: rgba(255, 255, 255, 0.28);
   background: rgba(238, 228, 190, 0.94);
@@ -530,6 +540,33 @@ h1 {
     left: 50%;
     width: 360px;
     transform: translateX(-50%);
+  }
+
+  .camera-panel-toggle {
+    position: fixed;
+    right: 20px;
+    bottom: 92px;
+    z-index: 5;
+    display: inline-flex;
+    min-height: 42px;
+    gap: 7px;
+    padding: 0 12px;
+    border-radius: 8px;
+  }
+
+  .camera-panel-toggle span {
+    font-size: 13px;
+    font-weight: 720;
+  }
+
+  .camera-controls {
+    right: 20px;
+    bottom: 144px;
+    display: flex;
+  }
+
+  .camera-controls.hidden {
+    display: none !important;
   }
 
   .sheet {
