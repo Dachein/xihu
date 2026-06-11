@@ -67,6 +67,43 @@
         </button>
       </aside>
 
+      <section class="camera-controls hidden" id="camera-controls" aria-label="观察控制">
+        <div class="dpad" aria-label="前后左右移动">
+          <button class="control-button dpad-up" data-camera-action="forward" type="button" aria-label="前进" title="前进">
+            <i data-lucide="arrow-up"></i>
+          </button>
+          <button class="control-button dpad-left" data-camera-action="left" type="button" aria-label="左移" title="左移">
+            <i data-lucide="arrow-left"></i>
+          </button>
+          <button class="control-button dpad-right" data-camera-action="right" type="button" aria-label="右移" title="右移">
+            <i data-lucide="arrow-right"></i>
+          </button>
+          <button class="control-button dpad-down" data-camera-action="backward" type="button" aria-label="后退" title="后退">
+            <i data-lucide="arrow-down"></i>
+          </button>
+        </div>
+        <div class="camera-strip" aria-label="升降旋转俯仰">
+          <button class="control-button" data-camera-action="zoom-out" type="button" aria-label="升高视角" title="升高视角">
+            <i data-lucide="zoom-out"></i>
+          </button>
+          <button class="control-button" data-camera-action="zoom-in" type="button" aria-label="降低视角" title="降低视角">
+            <i data-lucide="zoom-in"></i>
+          </button>
+          <button class="control-button" data-camera-action="rotate-left" type="button" aria-label="左转" title="左转">
+            <i data-lucide="rotate-ccw"></i>
+          </button>
+          <button class="control-button" data-camera-action="rotate-right" type="button" aria-label="右转" title="右转">
+            <i data-lucide="rotate-cw"></i>
+          </button>
+          <button class="control-button" data-camera-action="pitch-up" type="button" aria-label="增强俯视" title="增强俯视">
+            <i data-lucide="chevrons-up"></i>
+          </button>
+          <button class="control-button" data-camera-action="pitch-down" type="button" aria-label="降低俯仰" title="降低俯仰">
+            <i data-lucide="chevrons-down"></i>
+          </button>
+        </div>
+      </section>
+
       <section class="sheet" id="sheet" aria-label="实体列表">
         <div class="sheet-handle"></div>
         <div class="sheet-header">
@@ -94,6 +131,6 @@
 
     <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
     <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.js"></script>
-    <script type="module" src="src/main.js?v=point-entry-20260611d"></script>
+    <script type="module" src="src/main.js?v=camera-controls-20260611"></script>
   </body>
 </html>

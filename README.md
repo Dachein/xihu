@@ -75,3 +75,14 @@ The map now supports entering the 3D landscape from any point. Users can tap the
 API schema endpoint:
 
 - `/api/entry-schema`
+
+## Observation Controls
+
+When an observation point is active, the map shows a compact controller for moving through the 3D landscape:
+
+- Forward/back/left/right: move the observation point relative to current bearing.
+- Zoom in/out: lower or raise the camera.
+- Rotate left/right: change bearing.
+- Pitch up/down: change viewing angle.
+
+Keyboard shortcuts mirror the controls: arrow keys or WASD move, Q/E rotate, +/- zoom, and [/] adjust pitch. Each move updates the entry URL so the current mountain view can be shared.

@@ -26,7 +26,11 @@ const ENTRY_SOURCE_LABELS = {
   click: "地图点",
   share: "分享",
   view: "视角",
+  control: "操控",
 };
+
+const CAMERA_CONTROL_STEP_METERS = 45;
+const CAMERA_CONTROL_DURATION = 240;
 
 const state = {
   regions: null,
@@ -476,6 +480,13 @@ function bindUi() {
     button.addEventListener("click", () => setMode(button));
   });
 
+  document.querySelectorAll("[data-camera-action]").forEach((button) => {
+    button.addEventListener("click", handleCameraControlEvent);
+  });
+  document.addEventListener("click", handleCameraControlEvent, true);
+  document.addEventListener("pointerdown", stopCameraControlPointer, true);
+  document.addEventListener("keydown", handleCameraKeydown);
+
   map.on("click", (event) => {
     if (clickedDomainFeature(event.point)) return;
     setEntryPoint({
@@ -609,6 +620,7 @@ function setEntryPoint(input, options = {}) {
   state.entryPoint = point;
   syncEntryPointLayer();
   renderEntryPoint(point);
+  setCameraControlsVisible(true);
 
   if (options.writeUrl !== false) writeEntryPointToUrl(point);
   if (options.flyTo !== false) {
@@ -630,6 +642,149 @@ function moveToEntryPoint(point, options = {}) {
     map.easeTo({ ...camera, duration: 700 });
   }
   window.setTimeout(updateCameraState, 0);
+}
+
+function stopCameraControlPointer(event) {
+  if (!event.target.closest?.("[data-camera-action]")) return;
+  event.stopPropagation();
+}
+
+function handleCameraControlEvent(event) {
+  const button = event.target.closest?.("[data-camera-action]");
+  if (!button) return;
+  event.preventDefault();
+  event.stopPropagation();
+  applyCameraControl(button.dataset.cameraAction);
+}
+
+function applyCameraControl(action) {
+  const currentCenter = map.getCenter();
+  const current = {
+    center: [currentCenter.lng, currentCenter.lat],
+    zoom: map.getZoom(),
+    pitch: map.getPitch(),
+    bearing: map.getBearing(),
+  };
+  const next = { ...current };
+
+  if (action === "forward") next.center = moveCenterByMeters(current.center, CAMERA_CONTROL_STEP_METERS, 0, current.bearing);
+  if (action === "backward") next.center = moveCenterByMeters(current.center, -CAMERA_CONTROL_STEP_METERS, 0, current.bearing);
+  if (action === "left") next.center = moveCenterByMeters(current.center, 0, -CAMERA_CONTROL_STEP_METERS, current.bearing);
+  if (action === "right") next.center = moveCenterByMeters(current.center, 0, CAMERA_CONTROL_STEP_METERS, current.bearing);
+  if (action === "zoom-in") next.zoom = clamp(current.zoom + 0.35, 10.7, 17);
+  if (action === "zoom-out") next.zoom = clamp(current.zoom - 0.35, 10.7, 17);
+  if (action === "rotate-left") next.bearing = current.bearing - 12;
+  if (action === "rotate-right") next.bearing = current.bearing + 12;
+  if (action === "pitch-up") next.pitch = clamp(current.pitch + 6, 25, 78);
+  if (action === "pitch-down") next.pitch = clamp(current.pitch - 6, 25, 78);
+
+  map.easeTo({
+    center: next.center,
+    zoom: next.zoom,
+    pitch: next.pitch,
+    bearing: next.bearing,
+    duration: CAMERA_CONTROL_DURATION,
+  });
+  updateEntryPointFromCamera(next, "control");
+  window.setTimeout(updateCameraState, CAMERA_CONTROL_DURATION + 20);
+}
+
+function moveCenterByMeters(center, forwardMeters, rightMeters, bearingDegrees) {
+  const bearing = (bearingDegrees * Math.PI) / 180;
+  const north = Math.cos(bearing) * forwardMeters - Math.sin(bearing) * rightMeters;
+  const east = Math.sin(bearing) * forwardMeters + Math.cos(bearing) * rightMeters;
+  const metersPerDegreeLat = 111320;
+  const metersPerDegreeLng = 111320 * Math.cos((center[1] * Math.PI) / 180);
+
+  return clampToLandscapeBounds([
+    center[0] + east / metersPerDegreeLng,
+    center[1] + north / metersPerDegreeLat,
+  ]);
+}
+
+function clampToLandscapeBounds(center) {
+  return [
+    clamp(center[0], XIHU_LANDSCAPE_BOUNDS[0][0], XIHU_LANDSCAPE_BOUNDS[1][0]),
+    clamp(center[1], XIHU_LANDSCAPE_BOUNDS[0][1], XIHU_LANDSCAPE_BOUNDS[1][1]),
+  ];
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function updateEntryPointFromCamera(camera, source) {
+  const elevation = getElevationEstimate(camera.center[0], camera.center[1]);
+  const existing = state.entryPoint || {};
+  state.entryPoint = {
+    ...existing,
+    lng: camera.center[0],
+    lat: camera.center[1],
+    elevationM: elevation.value,
+    elevationConfidence: elevation.confidence,
+    source,
+    time: new Date().toISOString(),
+    camera: {
+      zoom: camera.zoom,
+      pitch: camera.pitch,
+      bearing: camera.bearing,
+    },
+  };
+
+  syncEntryPointLayer();
+  renderEntryPoint(state.entryPoint);
+  writeEntryPointToUrl(state.entryPoint);
+  setCameraControlsVisible(true);
+}
+
+function setCameraControlsVisible(visible) {
+  document.getElementById("camera-controls")?.classList.toggle("hidden", !visible);
+}
+
+function handleCameraKeydown(event) {
+  const active = document.activeElement;
+  if (active && ["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName)) return;
+
+  const keyActions = {
+    ArrowUp: "forward",
+    w: "forward",
+    W: "forward",
+    ArrowDown: "backward",
+    s: "backward",
+    S: "backward",
+    ArrowLeft: "left",
+    a: "left",
+    A: "left",
+    ArrowRight: "right",
+    d: "right",
+    D: "right",
+    q: "rotate-left",
+    Q: "rotate-left",
+    e: "rotate-right",
+    E: "rotate-right",
+    "+": "zoom-in",
+    "=": "zoom-in",
+    "-": "zoom-out",
+    "_": "zoom-out",
+    "[": "pitch-down",
+    "]": "pitch-up",
+  };
+
+  const action = keyActions[event.key];
+  if (!action) return;
+  event.preventDefault();
+  if (!state.entryPoint) {
+    const center = map.getCenter();
+    setEntryPoint(
+      {
+        lng: center.lng,
+        lat: center.lat,
+        source: "view",
+      },
+      { flyTo: false },
+    );
+  }
+  applyCameraControl(action);
 }
 
 function getElevationEstimate(lng, lat, explicitElevation) {
@@ -710,8 +865,7 @@ function writeEntryPointToUrl(point) {
 }
 
 function buildEntryPointUrl(point) {
-  const url = new URL(window.location.href);
-  url.hash = "";
+  const url = new URL(window.location.pathname || "/", window.location.origin);
   url.searchParams.set("lng", point.lng.toFixed(6));
   url.searchParams.set("lat", point.lat.toFixed(6));
   url.searchParams.set("source", point.source);
@@ -817,5 +971,3 @@ function updateCameraState() {
   camera.textContent = `${map.getZoom().toFixed(1)}z · ${Math.round(map.getPitch())}°`;
 }
 
-window.xihuDebug = { map, state, setEntryPoint, moveToEntryPoint };
-globalThis.xihuDebug = window.xihuDebug;
