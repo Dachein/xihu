@@ -54,3 +54,19 @@ Use GeoJSON `LineString` or `MultiLineString`. If per-point elevation/time must 
   "time": ["2026-06-10T08:00:00+08:00", "2026-06-10T08:02:00+08:00", "2026-06-10T08:05:00+08:00"]
 }
 ```
+
+## DEM Smoothing And Visual Detail
+
+The current public DEM terrain is 30m-class, so it can show West Lake mountain massing but not fine trail-scale terrain. MapLibre can exaggerate and shade terrain, but it cannot safely invent high-resolution elevation inside the client.
+
+Recommended production pipeline:
+
+1. Download/prepare source DEM GeoTIFF.
+2. Reproject and clip to the West Lake mountain-water-river AOI.
+3. Resample to a finer visual grid with cubic or cubic-spline interpolation.
+4. Apply low-pass smoothing to remove stair-step artifacts.
+5. Optionally add deterministic, low-amplitude fractal micro-relief for visual texture only. This must be seeded and reproducible, never random per page load.
+6. Preserve the original DEM or purchased DTM as the authoritative elevation source for navigation and safety calculations.
+7. Encode the visual DEM into Terrarium or Terrain-RGB tiles and host them from Cloudflare R2/Worker.
+
+The product should separate `visual terrain` from `navigation elevation`: painterly micro-relief may make the map more legible, but reliable route guidance must use measured elevation data.

@@ -36,6 +36,8 @@ const state = {
   regions: null,
   entities: [],
   trails: [],
+  addressFilter: "all",
+  searchQuery: "",
   selectedId: null,
   entryPoint: null,
   uiBound: false,
@@ -102,7 +104,7 @@ const map = new maplibregl.Map({
         id: "paper-base",
         type: "background",
         paint: {
-          "background-color": "#e7ddbd",
+          "background-color": "#d8ca96",
         },
       },
       {
@@ -136,25 +138,25 @@ const map = new maplibregl.Map({
         type: "hillshade",
         source: "hillshade",
         paint: {
-          "hillshade-accent-color": "#8a8a65",
-          "hillshade-highlight-color": "#f7efd2",
-          "hillshade-shadow-color": "#738069",
+          "hillshade-accent-color": "#6f7f5f",
+          "hillshade-highlight-color": "#fff4ca",
+          "hillshade-shadow-color": "#465748",
           "hillshade-illumination-direction": 315,
-          "hillshade-exaggeration": 0.72,
+          "hillshade-exaggeration": 0.96,
         },
       },
     ],
     terrain: {
       source: "terrain",
-      exaggeration: 1.25,
+      exaggeration: 1.58,
     },
     sky: {
       "sky-color": "#b8d3e0",
-      "sky-horizon-blend": 0.18,
-      "horizon-color": "#dbe4d2",
-      "horizon-fog-blend": 0.25,
-      "fog-color": "#8fa6a0",
-      "fog-ground-blend": 0.18,
+      "sky-horizon-blend": 0.08,
+      "horizon-color": "#d8debd",
+      "horizon-fog-blend": 0.08,
+      "fog-color": "#9aa78b",
+      "fog-ground-blend": 0.05,
     },
   },
 });
@@ -194,7 +196,7 @@ async function initializeApp() {
   state.entities = entities.features;
   state.trails = trails.features;
 
-  renderEntityList(state.entities);
+  renderAddressList(getFilteredAddressEntries());
   bindUi();
   updateCameraState();
   tryAddDomainLayers();
@@ -246,19 +248,19 @@ function addDomainLayers() {
         "match",
         ["get", "entity_kind"],
         "water",
-        "#77bfc0",
+        "#5fb2b5",
         "mountain",
-        ["coalesce", ["get", "color"], "#8fb36d"],
-        ["coalesce", ["get", "color"], "#9fb076"],
+        ["coalesce", ["get", "color"], "#75995a"],
+        ["coalesce", ["get", "color"], "#8f9f64"],
       ],
       "fill-opacity": [
         "match",
         ["get", "entity_kind"],
         "water",
-        0.48,
+        0.58,
         "mountain",
-        0.31,
-        0.26,
+        0.42,
+        0.32,
       ],
     },
   });
@@ -270,8 +272,8 @@ function addDomainLayers() {
     paint: {
       "line-color": ["coalesce", ["get", "color"], "#ad9c63"],
       "line-width": ["interpolate", ["linear"], ["zoom"], 10, 9, 15, 18],
-      "line-opacity": 0.12,
-      "line-blur": 7,
+      "line-opacity": 0.18,
+      "line-blur": 5,
     },
   });
 
@@ -282,8 +284,65 @@ function addDomainLayers() {
     paint: {
       "line-color": ["coalesce", ["get", "color"], "#9a8750"],
       "line-width": 1.2,
-      "line-opacity": 0.52,
-      "line-blur": 0.4,
+      "line-opacity": 0.68,
+      "line-blur": 0.25,
+    },
+  });
+
+  map.addLayer({
+    id: "water-body-glow",
+    type: "fill",
+    source: "regions",
+    filter: ["==", ["get", "entity_kind"], "water"],
+    paint: {
+      "fill-color": "#8fd3c9",
+      "fill-opacity": 0.32,
+      "fill-antialias": true,
+    },
+  });
+
+  map.addLayer({
+    id: "water-body",
+    type: "fill",
+    source: "regions",
+    filter: ["==", ["get", "entity_kind"], "water"],
+    paint: {
+      "fill-color": "#61b9b8",
+      "fill-opacity": 0.62,
+      "fill-antialias": true,
+    },
+  });
+
+  map.addLayer({
+    id: "water-edge",
+    type: "line",
+    source: "regions",
+    filter: ["==", ["get", "entity_kind"], "water"],
+    paint: {
+      "line-color": "#e7f0d2",
+      "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.2, 15, 3.2],
+      "line-opacity": 0.74,
+      "line-blur": 0.35,
+    },
+  });
+
+  map.addLayer({
+    id: "water-labels",
+    type: "symbol",
+    source: "regions",
+    filter: ["==", ["get", "entity_kind"], "water"],
+    layout: {
+      "text-field": ["get", "name"],
+      "text-size": ["interpolate", ["linear"], ["zoom"], 10, 12, 15, 18],
+      "text-font": ["Open Sans Regular"],
+      "text-letter-spacing": 0.02,
+      "text-allow-overlap": false,
+    },
+    paint: {
+      "text-color": "#23575b",
+      "text-halo-color": "#eef0cd",
+      "text-halo-width": 1.6,
+      "text-opacity": 0.92,
     },
   });
 
@@ -455,25 +514,16 @@ function bindUi() {
   });
 
   document.getElementById("entity-search").addEventListener("input", (event) => {
-    const query = event.target.value.trim().toLowerCase();
-    const features = state.entities.filter((feature) => {
-      const values = [
-        feature.properties.name,
-        feature.properties.name_en,
-        feature.properties.entity_kind,
-        feature.properties.parent_id,
-        feature.properties.tags,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return values.includes(query);
-    });
-    renderEntityList(features);
+    state.searchQuery = event.target.value.trim().toLowerCase();
+    renderAddressList(getFilteredAddressEntries());
   });
 
-  document.querySelectorAll(".layer-toggle").forEach((button) => {
-    button.addEventListener("click", () => toggleLayer(button));
+  document.querySelectorAll("[data-address-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.addressFilter = button.dataset.addressFilter;
+      updateAddressFilterButtons();
+      renderAddressList(getFilteredAddressEntries());
+    });
   });
 
   document.querySelectorAll(".mode-chip").forEach((button) => {
@@ -499,31 +549,6 @@ function bindUi() {
   restoreEntryPointFromUrl();
 }
 
-function toggleLayer(button) {
-  const layer = button.dataset.layer;
-  button.classList.toggle("active");
-  const visible = button.classList.contains("active");
-
-  if (layer === "satellite") {
-    setVisibility("satellite-base", visible);
-    return;
-  }
-  if (layer === "atlas") {
-    setVisibility("osm-atlas", visible);
-    return;
-  }
-  if (layer === "regions") {
-    setVisibility("region-fill", visible);
-    setVisibility("region-edge-soft", visible);
-    setVisibility("region-line", visible);
-    return;
-  }
-  if (layer === "trails") {
-    setVisibility("trail-casing", visible);
-    setVisibility("trail-line", visible);
-  }
-}
-
 function setMode(button) {
   document.querySelectorAll(".mode-chip").forEach((item) => item.classList.remove("active"));
   button.classList.add("active");
@@ -532,17 +557,11 @@ function setMode(button) {
   if (mode === "terrain") {
     map.easeTo({ pitch: 62, bearing: -24, zoom: Math.max(map.getZoom(), 11.85), duration: 700 });
   }
-  if (mode === "culture") {
-    map.easeTo({ pitch: 45, bearing: 0, zoom: 13.2, duration: 700 });
+  if (mode === "point") {
+    map.easeTo({ pitch: 48, bearing: 0, zoom: 13.4, duration: 700 });
   }
-  if (mode === "trail") {
+  if (mode === "route") {
     map.easeTo({ pitch: 72, bearing: -48, zoom: 13.8, duration: 700 });
-  }
-}
-
-function setVisibility(layerId, visible) {
-  if (map.getLayer(layerId)) {
-    map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
   }
 }
 
@@ -552,46 +571,117 @@ function clickedDomainFeature(point) {
   return map.queryRenderedFeatures(point, { layers }).length > 0;
 }
 
-function renderEntityList(features) {
+function getAddressEntries() {
+  const pointEntries = state.entities.map((feature) => ({ type: "point", feature }));
+  const areaEntries = (state.regions?.features || []).map((feature) => ({ type: "area", feature }));
+  const routeEntries = state.trails.map((feature) => ({ type: "route", feature }));
+  return [...pointEntries, ...areaEntries, ...routeEntries];
+}
+
+function getFilteredAddressEntries() {
+  const query = state.searchQuery;
+  return getAddressEntries().filter((entry) => {
+    if (state.addressFilter !== "all" && entry.type !== state.addressFilter) return false;
+    if (!query) return true;
+    return getAddressSearchText(entry.feature, entry.type).includes(query);
+  });
+}
+
+function getAddressSearchText(feature, type) {
+  const properties = feature.properties || {};
+  return [
+    addressTypeLabel(type),
+    kindLabel(properties.entity_kind || properties.trail_kind),
+    ...Object.values(properties),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function updateAddressFilterButtons() {
+  document.querySelectorAll("[data-address-filter]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.addressFilter === state.addressFilter);
+  });
+}
+
+function renderAddressList(entries) {
   const list = document.getElementById("entity-list");
   list.innerHTML = "";
 
-  features.forEach((feature) => {
+  if (!entries.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = "没有匹配的地址";
+    list.appendChild(empty);
+    return;
+  }
+
+  entries.forEach(({ type, feature }) => {
+    const properties = feature.properties || {};
     const button = document.createElement("button");
     button.className = "entity-item";
     button.type = "button";
     button.innerHTML = `
       <span>
-        <strong>${feature.properties.name}</strong>
-        <p>${feature.properties.summary}</p>
+        <strong>${properties.name || "未命名地址"}</strong>
+        <p>${addressSummary(feature, type)}</p>
       </span>
-      <span class="entity-kind">${kindLabel(feature.properties.entity_kind)}</span>
+      <span class="entity-kind address-type-${type}">${addressTypeLabel(type)}</span>
     `;
     button.addEventListener("click", () => selectFeature(feature));
     list.appendChild(button);
   });
 }
 
+function addressSummary(feature, type) {
+  const properties = feature.properties || {};
+  if (properties.summary) return properties.summary;
+  if (properties.description) return properties.description;
+  const kind = kindLabel(properties.entity_kind || properties.trail_kind);
+  return `${addressTypeLabel(type)} · ${kind}`;
+}
+
+function addressTypeLabel(type) {
+  const labels = {
+    point: "点",
+    area: "区",
+    route: "路",
+  };
+  return labels[type] || "点";
+}
+
+function getAddressType(feature) {
+  const geometryType = feature.geometry?.type;
+  if (geometryType === "LineString" || geometryType === "MultiLineString") return "route";
+  if (geometryType === "Polygon" || geometryType === "MultiPolygon") return "area";
+  return "point";
+}
+
 function selectFeature(feature) {
-  state.selectedId = feature.properties.id;
+  const type = getAddressType(feature);
+  const properties = feature.properties || {};
+  state.selectedId = properties.id || properties.name || null;
   const coordinates = getFeatureCenter(feature);
+  const targetZoom = type === "area" ? 13.2 : type === "route" ? 13.8 : 14.3;
   map.flyTo({
     center: coordinates,
-    zoom: Math.max(map.getZoom(), 14.3),
-    pitch: 67,
+    zoom: Math.max(map.getZoom(), targetZoom),
+    pitch: type === "route" ? 70 : 64,
     bearing: map.getBearing(),
     duration: 750,
   });
 
-  document.getElementById("sheet-title").textContent = "西湖文化地点";
-  const parent = feature.properties.parent_id ? `<span class="meta-pill">${feature.properties.parent_id}</span>` : "";
+  document.getElementById("sheet-title").textContent = "地址";
+  const parent = properties.parent_id ? `<span class="meta-pill">${properties.parent_id}</span>` : "";
   document.getElementById("detail-card").innerHTML = `
-    <h2>${feature.properties.name}</h2>
-    <p>${feature.properties.summary || feature.properties.description || "暂无描述"}</p>
+    <h2>${properties.name || "未命名地址"}</h2>
+    <p>${addressSummary(feature, type)}</p>
     <div class="meta-line">
-      <span class="meta-pill">${kindLabel(feature.properties.entity_kind || feature.properties.trail_kind)}</span>
+      <span class="meta-pill">${addressTypeLabel(type)}</span>
+      <span class="meta-pill">${kindLabel(properties.entity_kind || properties.trail_kind)}</span>
       ${parent}
-      <span class="meta-pill">${feature.properties.confidence || "draft"}</span>
+      <span class="meta-pill">${properties.confidence || "draft"}</span>
     </div>
   `;
 }
@@ -944,11 +1034,35 @@ function formatEntryTime(value) {
 }
 
 function getFeatureCenter(feature) {
-  if (feature.geometry.type === "Point") return feature.geometry.coordinates;
-  if (feature.geometry.type === "LineString") {
-    return feature.geometry.coordinates[Math.floor(feature.geometry.coordinates.length / 2)];
+  const geometry = feature.geometry;
+  if (!geometry) return WEST_LAKE_VIEW.center;
+  if (geometry.type === "Point") return geometry.coordinates;
+  if (geometry.type === "LineString") {
+    return geometry.coordinates[Math.floor(geometry.coordinates.length / 2)];
   }
-  return WEST_LAKE_VIEW.center;
+
+  const coordinates = flattenCoordinates(geometry.coordinates);
+  if (!coordinates.length) return WEST_LAKE_VIEW.center;
+  const lngs = coordinates.map((coordinate) => coordinate[0]);
+  const lats = coordinates.map((coordinate) => coordinate[1]);
+  return [
+    (Math.min(...lngs) + Math.max(...lngs)) / 2,
+    (Math.min(...lats) + Math.max(...lats)) / 2,
+  ];
+}
+
+function flattenCoordinates(coordinates) {
+  const points = [];
+  const walk = (value) => {
+    if (!Array.isArray(value)) return;
+    if (typeof value[0] === "number" && typeof value[1] === "number") {
+      points.push(value);
+      return;
+    }
+    value.forEach(walk);
+  };
+  walk(coordinates);
+  return points;
 }
 
 function kindLabel(kind) {
