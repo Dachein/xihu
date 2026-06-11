@@ -14,7 +14,13 @@
         "summary": "西湖文化景观的水体核心，三面云山一面城。",
         "tags": "lake cultural-landscape unesco"
       },
-      "geometry": { "type": "Point", "coordinates": [120.138, 30.244] }
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.138,
+          30.244
+        ]
+      }
     },
     {
       "type": "Feature",
@@ -29,7 +35,13 @@
         "summary": "西湖北侧重要山峰，连接灵隐、财神庙及多条山径。",
         "tags": "ridge peak trail"
       },
-      "geometry": { "type": "Point", "coordinates": [120.094, 30.259] }
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.094,
+          30.259
+        ]
+      }
     },
     {
       "type": "Feature",
@@ -44,7 +56,13 @@
         "summary": "西湖西侧山谷中的佛教文化核心，与飞来峰、北高峰山域相连。",
         "tags": "temple buddhism valley"
       },
-      "geometry": { "type": "Point", "coordinates": [120.101, 30.240] }
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.101,
+          30.24
+        ]
+      }
     },
     {
       "type": "Feature",
@@ -59,7 +77,13 @@
         "summary": "茶文化与山谷路径交汇区域，连接九溪、满觉陇、翁家山。",
         "tags": "tea valley village"
       },
-      "geometry": { "type": "Point", "coordinates": [120.101, 30.219] }
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.101,
+          30.219
+        ]
+      }
     },
     {
       "type": "Feature",
@@ -74,7 +98,13 @@
         "summary": "西湖南部山水溪谷，适合承载水系、古道和茶山路径数据。",
         "tags": "creek valley trail"
       },
-      "geometry": { "type": "Point", "coordinates": [120.107, 30.195] }
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.107,
+          30.195
+        ]
+      }
     },
     {
       "type": "Feature",
@@ -89,7 +119,13 @@
         "summary": "西湖南部山脊节点，未来可作为十里琅珰等路线高程校验点。",
         "tags": "peak ridge trail"
       },
-      "geometry": { "type": "Point", "coordinates": [120.087, 30.186] }
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.087,
+          30.186
+        ]
+      }
     },
     {
       "type": "Feature",
@@ -104,7 +140,13 @@
         "summary": "西湖南缘山体节点，向东联系吴山，向西联系虎跑、满觉陇。",
         "tags": "peak ridge view"
       },
-      "geometry": { "type": "Point", "coordinates": [120.151, 30.213] }
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.151,
+          30.213
+        ]
+      }
     },
     {
       "type": "Feature",
@@ -119,7 +161,55 @@
         "summary": "西湖北岸山体，保俶塔和湖城视线关系的重要节点。",
         "tags": "hill pagoda view"
       },
-      "geometry": { "type": "Point", "coordinates": [120.146, 30.264] }
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.146,
+          30.264
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "qiantang_river",
+        "parent_id": "region_qiantang_river",
+        "name": "钱塘江",
+        "name_en": "Qiantang River",
+        "entity_kind": "water",
+        "elevation_m": 5,
+        "confidence": "draft",
+        "summary": "西湖群山南缘的大水界面，与六和塔、九溪、之江一线共同构成湖山江关系。",
+        "tags": "river landscape-boundary water"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.145,
+          30.178
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "liuhe_pagoda",
+        "parent_id": "region_qiantang_river",
+        "name": "六和塔",
+        "name_en": "Liuhe Pagoda",
+        "entity_kind": "view",
+        "elevation_m": 58,
+        "confidence": "draft",
+        "summary": "钱塘江北岸观江地标，是西湖山体面向大江的文化节点。",
+        "tags": "pagoda river view cultural-landmark"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.13,
+          30.195
+        ]
+      }
     }
   ]
 }

@@ -1,8 +1,13 @@
+const XIHU_LANDSCAPE_BOUNDS = [
+  [120.052, 30.158],
+  [120.206, 30.292],
+];
+
 const WEST_LAKE_VIEW = {
-  center: [120.1296, 30.2394],
-  zoom: 12.4,
-  pitch: 64,
-  bearing: -28,
+  center: [120.128, 30.224],
+  zoom: 11.85,
+  pitch: 62,
+  bearing: -24,
 };
 
 const DATA_URLS = {
@@ -25,7 +30,7 @@ const map = new maplibregl.Map({
   zoom: WEST_LAKE_VIEW.zoom,
   pitch: WEST_LAKE_VIEW.pitch,
   bearing: WEST_LAKE_VIEW.bearing,
-  minZoom: 10,
+  minZoom: 10.7,
   maxZoom: 17,
   maxPitch: 82,
   hash: true,
@@ -132,10 +137,7 @@ map.addControl(
 map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
 
 map.on("load", async () => {
-  map.setMaxBounds([
-    [120.03, 30.14],
-    [120.23, 30.33],
-  ]);
+  map.setMaxBounds(XIHU_LANDSCAPE_BOUNDS);
 
   await addDomainLayers();
   bindUi();

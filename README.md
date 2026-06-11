@@ -35,6 +35,18 @@ The app is static-first. `functions/api/entities.js` is included as a Cloudflare
 
 Future walking GPS tracks can be normalized into GeoJSON features with time/elevation arrays, then merged into `trail-lines.geojson` or served from a Cloudflare D1/R2-backed API.
 
+
+## Current Area of Interest
+
+The working AOI is now the West Lake mountain-water-river system, not only the lake basin.
+
+- North: Baoshishan, Bei Gaofeng, Lingyin mountain edge.
+- West: Lingyin, Longjing, Jiuxi, Wuyunshan mountain system.
+- South: Qiantang River and Liuhe Pagoda / Zhijiang interface.
+- East: Wushan, Yuhuangshan, and the city-facing lake edge.
+
+The map limits panning with `XIHU_LANDSCAPE_BOUNDS` in `src/main.js` so mobile clients request fewer terrain and imagery tiles than a broad Hangzhou-scale scene.
+
 ## DEM Plan
 
 The current prototype uses public Terrarium DEM tiles as a 30m-class development terrain base. This is enough to validate West Lake terrain rendering, camera behavior, and cultural/trail overlays.
