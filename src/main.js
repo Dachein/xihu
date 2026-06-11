@@ -17,9 +17,12 @@ const DATA_URLS = {
 };
 
 const state = {
+  regions: null,
   entities: [],
   trails: [],
   selectedId: null,
+  uiBound: false,
+  domainLayersAdded: false,
 };
 
 lucide.createIcons();
@@ -79,13 +82,23 @@ const map = new maplibregl.Map({
     },
     layers: [
       {
+        id: "paper-base",
+        type: "background",
+        paint: {
+          "background-color": "#e7ddbd",
+        },
+      },
+      {
         id: "satellite-base",
         type: "raster",
         source: "satellite",
+        layout: { visibility: "none" },
         paint: {
-          "raster-opacity": 0.84,
-          "raster-saturation": -0.14,
-          "raster-contrast": 0.05,
+          "raster-opacity": 0.74,
+          "raster-saturation": -0.28,
+          "raster-contrast": -0.08,
+          "raster-brightness-min": 0.08,
+          "raster-brightness-max": 0.92,
         },
       },
       {
@@ -94,8 +107,11 @@ const map = new maplibregl.Map({
         source: "osm",
         layout: { visibility: "none" },
         paint: {
-          "raster-opacity": 0.96,
-          "raster-saturation": -0.2,
+          "raster-opacity": 0.26,
+          "raster-saturation": -0.85,
+          "raster-contrast": -0.12,
+          "raster-brightness-min": 0.18,
+          "raster-brightness-max": 0.96,
         },
       },
       {
@@ -103,11 +119,11 @@ const map = new maplibregl.Map({
         type: "hillshade",
         source: "hillshade",
         paint: {
-          "hillshade-accent-color": "#56745c",
-          "hillshade-highlight-color": "#eef0d4",
-          "hillshade-shadow-color": "#1a271f",
+          "hillshade-accent-color": "#8a8a65",
+          "hillshade-highlight-color": "#f7efd2",
+          "hillshade-shadow-color": "#738069",
           "hillshade-illumination-direction": 315,
-          "hillshade-exaggeration": 0.55,
+          "hillshade-exaggeration": 0.72,
         },
       },
     ],
@@ -135,36 +151,69 @@ map.addControl(
   "bottom-right",
 );
 map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
+map.setMaxBounds(XIHU_LANDSCAPE_BOUNDS);
 
-map.on("load", async () => {
-  map.setMaxBounds(XIHU_LANDSCAPE_BOUNDS);
+initializeApp();
 
-  await addDomainLayers();
-  bindUi();
+map.on("load", () => {
+  tryAddDomainLayers();
   updateCameraState();
 });
-
+map.on("styledata", tryAddDomainLayers);
+map.on("idle", tryAddDomainLayers);
 map.on("move", updateCameraState);
 
-async function addDomainLayers() {
+const layerInitTimer = window.setInterval(() => {
+  tryAddDomainLayers();
+  if (state.domainLayersAdded) window.clearInterval(layerInitTimer);
+}, 700);
+
+async function initializeApp() {
   const [regions, entities, trails] = await Promise.all(
     Object.values(DATA_URLS).map((url) => fetch(url).then((res) => res.json())),
   );
 
+  state.regions = regions;
   state.entities = entities.features;
   state.trails = trails.features;
 
+  renderEntityList(state.entities);
+  bindUi();
+  updateCameraState();
+  tryAddDomainLayers();
+}
+
+function tryAddDomainLayers() {
+  if (state.domainLayersAdded || !state.regions || map.getSource("regions")) return;
+
+  try {
+    addDomainLayers();
+    state.domainLayersAdded = true;
+  } catch (error) {
+    if (!String(error?.message || error).includes("Style is not done loading")) {
+      console.warn("Domain layers are waiting for the map style.", error);
+    }
+  }
+}
+
+function addDomainLayers() {
   map.addSource("regions", {
     type: "geojson",
-    data: regions,
+    data: state.regions,
   });
   map.addSource("entities", {
     type: "geojson",
-    data: entities,
+    data: {
+      type: "FeatureCollection",
+      features: state.entities,
+    },
   });
   map.addSource("trails", {
     type: "geojson",
-    data: trails,
+    data: {
+      type: "FeatureCollection",
+      features: state.trails,
+    },
   });
 
   map.addLayer({
@@ -172,8 +221,36 @@ async function addDomainLayers() {
     type: "fill",
     source: "regions",
     paint: {
-      "fill-color": ["coalesce", ["get", "color"], "#7db275"],
-      "fill-opacity": 0.22,
+      "fill-color": [
+        "match",
+        ["get", "entity_kind"],
+        "water",
+        "#77bfc0",
+        "mountain",
+        ["coalesce", ["get", "color"], "#8fb36d"],
+        ["coalesce", ["get", "color"], "#9fb076"],
+      ],
+      "fill-opacity": [
+        "match",
+        ["get", "entity_kind"],
+        "water",
+        0.48,
+        "mountain",
+        0.31,
+        0.26,
+      ],
+    },
+  });
+
+  map.addLayer({
+    id: "region-edge-soft",
+    type: "line",
+    source: "regions",
+    paint: {
+      "line-color": ["coalesce", ["get", "color"], "#ad9c63"],
+      "line-width": ["interpolate", ["linear"], ["zoom"], 10, 9, 15, 18],
+      "line-opacity": 0.12,
+      "line-blur": 7,
     },
   });
 
@@ -182,9 +259,10 @@ async function addDomainLayers() {
     type: "line",
     source: "regions",
     paint: {
-      "line-color": ["coalesce", ["get", "color"], "#d7b760"],
-      "line-width": 1.4,
-      "line-opacity": 0.86,
+      "line-color": ["coalesce", ["get", "color"], "#9a8750"],
+      "line-width": 1.2,
+      "line-opacity": 0.52,
+      "line-blur": 0.4,
     },
   });
 
@@ -193,9 +271,10 @@ async function addDomainLayers() {
     type: "line",
     source: "trails",
     paint: {
-      "line-color": "#220b08",
-      "line-width": ["interpolate", ["linear"], ["zoom"], 11, 4, 15, 8],
-      "line-opacity": 0.72,
+      "line-color": "#f6ddad",
+      "line-width": ["interpolate", ["linear"], ["zoom"], 11, 5, 15, 10],
+      "line-opacity": 0.74,
+      "line-blur": 1.2,
     },
   });
 
@@ -204,9 +283,10 @@ async function addDomainLayers() {
     type: "line",
     source: "trails",
     paint: {
-      "line-color": ["coalesce", ["get", "color"], "#e6563f"],
-      "line-width": ["interpolate", ["linear"], ["zoom"], 11, 2.2, 15, 5],
-      "line-opacity": 0.94,
+      "line-color": ["coalesce", ["get", "color"], "#cf5b44"],
+      "line-width": ["interpolate", ["linear"], ["zoom"], 11, 2.1, 15, 5.4],
+      "line-opacity": 0.9,
+      "line-blur": 0.35,
     },
   });
 
@@ -229,8 +309,8 @@ async function addDomainLayers() {
         "#f0a05f",
         "#f2eee2",
       ],
-      "circle-stroke-color": "#17221b",
-      "circle-stroke-width": 1.6,
+      "circle-stroke-color": "#fff1cf",
+      "circle-stroke-width": 1.9,
     },
   });
 
@@ -247,9 +327,9 @@ async function addDomainLayers() {
       "text-font": ["Open Sans Regular"],
     },
     paint: {
-      "text-color": "#fff4d8",
-      "text-halo-color": "#142119",
-      "text-halo-width": 1.3,
+      "text-color": "#3e2f1c",
+      "text-halo-color": "#f4eacb",
+      "text-halo-width": 1.6,
     },
   });
 
@@ -265,10 +345,11 @@ async function addDomainLayers() {
     });
   });
 
-  renderEntityList(state.entities);
 }
 
 function bindUi() {
+  if (state.uiBound) return;
+  state.uiBound = true;
   document.getElementById("reset-btn").addEventListener("click", () => {
     map.flyTo({ ...WEST_LAKE_VIEW, duration: 900 });
   });
@@ -331,6 +412,7 @@ function toggleLayer(button) {
   }
   if (layer === "regions") {
     setVisibility("region-fill", visible);
+    setVisibility("region-edge-soft", visible);
     setVisibility("region-line", visible);
     return;
   }
@@ -346,7 +428,7 @@ function setMode(button) {
 
   const mode = button.dataset.mode;
   if (mode === "terrain") {
-    map.easeTo({ pitch: 68, bearing: -30, zoom: Math.max(map.getZoom(), 12.4), duration: 700 });
+    map.easeTo({ pitch: 62, bearing: -24, zoom: Math.max(map.getZoom(), 11.85), duration: 700 });
   }
   if (mode === "culture") {
     map.easeTo({ pitch: 45, bearing: 0, zoom: 13.2, duration: 700 });

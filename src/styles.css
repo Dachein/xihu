@@ -2,13 +2,14 @@
   color-scheme: dark;
   --ink: #f3f4ec;
   --muted: #aeb9ad;
-  --panel: rgba(13, 24, 20, 0.82);
-  --panel-strong: rgba(9, 17, 15, 0.92);
-  --line: rgba(255, 255, 255, 0.16);
-  --green: #77b77a;
-  --gold: #d7b760;
-  --water: #61b7bb;
-  --trail: #e6563f;
+  --panel: rgba(31, 39, 31, 0.8);
+  --panel-strong: rgba(19, 27, 21, 0.92);
+  --line: rgba(246, 231, 193, 0.22);
+  --green: #86aa67;
+  --gold: #c9a750;
+  --water: #75b9b8;
+  --trail: #cf5b44;
+  --paper: #e7ddbd;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -24,7 +25,7 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  background: #0d1814;
+  background: var(--paper);
   color: var(--ink);
 }
 
@@ -44,7 +45,34 @@ button {
 }
 
 #map {
-  background: #0d1814;
+  background: var(--paper);
+}
+
+.app-shell::before,
+.app-shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.app-shell::before {
+  opacity: 0.34;
+  mix-blend-mode: multiply;
+  background:
+    radial-gradient(circle at 18% 24%, rgba(255, 246, 208, 0.7), transparent 24%),
+    radial-gradient(circle at 75% 62%, rgba(100, 143, 111, 0.2), transparent 34%),
+    linear-gradient(120deg, rgba(139, 112, 72, 0.12), transparent 44%, rgba(67, 118, 120, 0.12)),
+    repeating-linear-gradient(8deg, rgba(83, 67, 38, 0.035) 0 1px, transparent 1px 6px);
+}
+
+.app-shell::after {
+  opacity: 0.18;
+  mix-blend-mode: soft-light;
+  background:
+    repeating-radial-gradient(circle at 22% 30%, rgba(49, 34, 18, 0.18) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(96deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 7px);
 }
 
 .topbar {
@@ -88,7 +116,7 @@ button {
   border-radius: 50%;
   background:
     radial-gradient(circle at 38% 35%, var(--water) 0 20%, transparent 22%),
-    conic-gradient(from 210deg, var(--green), #284d36, var(--gold), var(--green));
+    conic-gradient(from 210deg, var(--green), #4f6b42, var(--gold), var(--green));
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12);
 }
 
@@ -166,7 +194,7 @@ button {
 .layer-toggle.active {
   color: #07120f;
   border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(228, 238, 207, 0.92);
+  background: rgba(238, 228, 190, 0.94);
 }
 
 .layer-panel {

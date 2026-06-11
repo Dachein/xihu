@@ -46,3 +46,23 @@ Phase 3:
 
 - Generate custom shaded-relief and color-relief tiles from our chosen DEM.
 - Add hand-tuned ridge, valley, lake, river, and cultural-route layers.
+
+
+## Stamen Reference
+
+Stamen Terrain and Watercolor are the closest external references for the desired direction.
+
+What to borrow:
+
+- Watercolor-style area washes instead of literal satellite texture.
+- Organic edges around water and terrain regions.
+- Hillshade and natural vegetation colors for orientation.
+- High selectivity: only draw what supports reading the place.
+
+What not to copy directly:
+
+- Do not depend on Stamen/Stadia raster tiles as the product default.
+- Do not make the atlas a generic world map skin.
+- Keep West Lake cultural entities, paths, and terrain data controlled by this project.
+
+Current implementation follows this as a local style: paper background, DEM hillshade, washed water/mountain polygons, softened region edges, and symbolic paths/labels.
