@@ -2,9 +2,11 @@
   "name": "xihu",
   "version": "0.1.0",
   "private": true,
-  "description": "Mobile-first cultural terrain map for Hangzhou West Lake.",
+  "description": "Worker-hosted mobile-first cultural terrain map for Hangzhou West Lake.",
   "scripts": {
-    "dev": "npx serve . -l 8788",
-    "deploy": "npx wrangler pages deploy . --project-name xihu"
+    "dev": "npx wrangler dev",
+    "deploy": "npx wrangler deploy",
+    "deploy:pages": "npx wrangler pages deploy public --project-name xihu",
+    "check": "node --check worker/index.js && node --check public/src/main.js"
   }
 }

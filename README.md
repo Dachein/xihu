@@ -14,24 +14,33 @@ This prototype starts with the first approach: MapLibre GL JS renders a DEM-back
 ## Local Preview
 
 ```bash
-python3 -m http.server 8788
+npm run dev
 ```
 
-Open `http://localhost:8788`.
+Open the Wrangler local URL, usually `http://localhost:8787`.
 
-## Cloudflare Pages
+## Cloudflare Worker
 
 ```bash
-npx wrangler pages deploy . --project-name xihu
+npm run deploy
 ```
 
-The app is static-first. `functions/api/entities.js` is included as a Cloudflare Pages Function stub for future dynamic data access.
+The app is now a Worker with Static Assets. Static files live in `public/`, and `worker/index.js` owns API routing plus static asset fallback.
+
+Current API routes:
+
+- `/api/health`
+- `/api/entities`
+- `/api/trails`
+- `/api/regions`
+
+The earlier Cloudflare Pages preview can remain as a historical preview, but the product runtime should use Workers.
 
 ## Data Model
 
-- `data/xihu-regions.geojson`: scenic/cultural area polygons.
-- `data/cultural-entities.geojson`: cultural place entities with `id`, `parent_id`, `entity_kind`, `elevation_m`, and tags.
-- `data/trail-lines.geojson`: mountain and lakeside paths as GeoJSON LineString features.
+- `public/data/xihu-regions.geojson`: scenic/cultural area polygons.
+- `public/data/cultural-entities.geojson`: cultural place entities with `id`, `parent_id`, `entity_kind`, `elevation_m`, and tags.
+- `public/data/trail-lines.geojson`: mountain and lakeside paths as GeoJSON LineString features.
 
 Future walking GPS tracks can be normalized into GeoJSON features with time/elevation arrays, then merged into `trail-lines.geojson` or served from a Cloudflare D1/R2-backed API.
 
