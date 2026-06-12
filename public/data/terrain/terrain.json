@@ -1,0 +1,1 @@
+{"tilejson":"3.0.0","name":"West Lake Copernicus GLO-30 Terrarium","scheme":"xyz","tiles":["/data/terrain/terrarium/{z}/{x}/{y}.png"],"bounds":[120.03,30.14,120.23,30.33],"minzoom":10,"maxzoom":15,"tileSize":256,"encoding":"terrarium","attribution":"Copernicus DEM GLO-30"}
