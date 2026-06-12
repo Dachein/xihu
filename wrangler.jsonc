@@ -8,6 +8,19 @@
     "binding": "ASSETS",
     "not_found_handling": "single-page-application"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "xihu-app",
+      "database_id": "063b376b-3f95-4ca4-90c7-41bc6d166ccc"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "TILES",
+      "bucket_name": "xihu-terrain"
+    }
+  ],
   "observability": {
     "enabled": true
   }

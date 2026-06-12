@@ -11,10 +11,53 @@ const WEST_LAKE_VIEW = {
 };
 
 const DATA_URLS = {
-  regions: "data/xihu-regions.geojson",
-  entities: "data/cultural-entities.geojson",
-  trails: "data/trail-lines.geojson",
+  regions: "/api/regions",
+  entities: "/api/entities?limit=1200",
+  trails: "/api/trails",
+  artSurfaces: "/data/art-surface.geojson",
 };
+
+const TERRAIN_PMTILES_URL = "/data/terrain/xihu-render-terrain.pmtiles?v=glo30-render-20260612e";
+
+const SURFACE_COLOR_EXPRESSION = [
+  "match",
+  ["get", "surface_class"],
+  "tea",
+  "#6f8b54",
+  "woodland",
+  "#596f4b",
+  "park",
+  "#7f9a68",
+  "grass",
+  "#ada86f",
+  "field",
+  "#9a9061",
+  "built",
+  "#8a7d68",
+  "open",
+  "#b5aa82",
+  "#8f9f64",
+];
+
+const SURFACE_PATTERN_EXPRESSION = [
+  "match",
+  ["get", "surface_class"],
+  "tea",
+  "surface-tea",
+  "woodland",
+  "surface-woodland",
+  "park",
+  "surface-park",
+  "grass",
+  "surface-grass",
+  "field",
+  "surface-field",
+  "built",
+  "surface-built",
+  "open",
+  "surface-open",
+  "surface-open",
+];
 
 const EMPTY_FEATURE_COLLECTION = {
   type: "FeatureCollection",
@@ -32,20 +75,27 @@ const ENTRY_SOURCE_LABELS = {
 const CAMERA_CONTROL_STEP_METERS = 45;
 const CAMERA_CONTROL_DURATION = 240;
 const DESKTOP_CONTROL_QUERY = "(min-width: 780px)";
+const TERRAIN_EXAGGERATION_DEFAULT = 1.24;
 
 const state = {
   regions: null,
   entities: [],
   trails: [],
+  artSurfaces: null,
   addressFilter: "all",
   searchQuery: "",
   selectedId: null,
   entryPoint: null,
   uiBound: false,
   domainLayersAdded: false,
+  artSurfaceLayersAdding: false,
+  artSurfaceLayersAdded: false,
 };
 
 lucide.createIcons();
+registerPmtilesProtocol();
+
+let currentTerrainExaggeration = TERRAIN_EXAGGERATION_DEFAULT;
 
 const map = new maplibregl.Map({
   container: "map",
@@ -86,17 +136,19 @@ const map = new maplibregl.Map({
       },
       terrain: {
         type: "raster-dem",
-        tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+        url: `pmtiles://${TERRAIN_PMTILES_URL}`,
         tileSize: 256,
-        maxzoom: 15,
+        minzoom: 10,
+        maxzoom: 16,
         encoding: "terrarium",
-        attribution: "AWS Terrain Tiles",
+        attribution: "Copernicus DEM GLO-30, render-optimized",
       },
       hillshade: {
         type: "raster-dem",
-        tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+        url: `pmtiles://${TERRAIN_PMTILES_URL}`,
         tileSize: 256,
-        maxzoom: 15,
+        minzoom: 10,
+        maxzoom: 16,
         encoding: "terrarium",
       },
     },
@@ -143,13 +195,13 @@ const map = new maplibregl.Map({
           "hillshade-highlight-color": "#fff4ca",
           "hillshade-shadow-color": "#465748",
           "hillshade-illumination-direction": 315,
-          "hillshade-exaggeration": 0.96,
+          "hillshade-exaggeration": 0.58,
         },
       },
     ],
     terrain: {
       source: "terrain",
-      exaggeration: 1.58,
+      exaggeration: TERRAIN_EXAGGERATION_DEFAULT,
     },
     sky: {
       "sky-color": "#b8d3e0",
@@ -178,20 +230,38 @@ initializeApp();
 map.on("load", () => {
   tryAddDomainLayers();
   updateCameraState();
+  syncTerrainExaggeration();
 });
-map.on("styledata", tryAddDomainLayers);
-map.on("idle", tryAddDomainLayers);
-map.on("move", updateCameraState);
+map.on("styledata", tryAddDeferredLayers);
+map.on("idle", tryAddDeferredLayers);
+map.on("move", () => {
+  updateCameraState();
+  syncTerrainExaggeration();
+});
 
 const layerInitTimer = window.setInterval(() => {
-  tryAddDomainLayers();
-  if (state.domainLayersAdded) window.clearInterval(layerInitTimer);
+  tryAddDeferredLayers();
+  if (state.domainLayersAdded && (!state.artSurfaces || state.artSurfaceLayersAdded)) window.clearInterval(layerInitTimer);
 }, 700);
 
+function registerPmtilesProtocol() {
+  if (!window.pmtiles?.Protocol) {
+    console.warn("PMTiles library is not available; terrain source may fail.");
+    return;
+  }
+  if (window.__xihuPmtilesProtocolRegistered) return;
+
+  const protocol = new window.pmtiles.Protocol();
+  maplibregl.addProtocol("pmtiles", protocol.tile);
+  window.__xihuPmtilesProtocolRegistered = true;
+}
+
 async function initializeApp() {
-  const [regions, entities, trails] = await Promise.all(
-    Object.values(DATA_URLS).map((url) => fetch(url).then((res) => res.json())),
-  );
+  const [regions, entities, trails] = await Promise.all([
+    fetch(DATA_URLS.regions).then((res) => res.json()),
+    fetch(DATA_URLS.entities).then((res) => res.json()),
+    fetch(DATA_URLS.trails).then((res) => res.json()),
+  ]);
 
   state.regions = regions;
   state.entities = entities.features;
@@ -201,6 +271,21 @@ async function initializeApp() {
   bindUi();
   updateCameraState();
   tryAddDomainLayers();
+  loadArtSurfaces();
+}
+
+async function loadArtSurfaces() {
+  try {
+    state.artSurfaces = await fetch(DATA_URLS.artSurfaces).then((res) => res.json());
+    tryAddArtSurfaceLayers();
+  } catch (error) {
+    console.warn("Art surface layer failed to load.", error);
+  }
+}
+
+function tryAddDeferredLayers() {
+  tryAddDomainLayers();
+  tryAddArtSurfaceLayers();
 }
 
 function tryAddDomainLayers() {
@@ -209,6 +294,7 @@ function tryAddDomainLayers() {
   try {
     addDomainLayers();
     state.domainLayersAdded = true;
+    tryAddArtSurfaceLayers();
   } catch (error) {
     if (!String(error?.message || error).includes("Style is not done loading")) {
       console.warn("Domain layers are waiting for the map style.", error);
@@ -557,6 +643,22 @@ function setMode(button) {
   }
 }
 
+function terrainExaggerationForZoom(zoom) {
+  if (zoom >= 16) return 1.04;
+  if (zoom >= 15) return 1.1;
+  if (zoom >= 14) return 1.16;
+  if (zoom >= 13) return 1.22;
+  return 1.28;
+}
+
+function syncTerrainExaggeration() {
+  if (!map.getSource("terrain")) return;
+  const nextExaggeration = terrainExaggerationForZoom(map.getZoom());
+  if (Math.abs(nextExaggeration - currentTerrainExaggeration) < 0.015) return;
+  currentTerrainExaggeration = nextExaggeration;
+  map.setTerrain({ source: "terrain", exaggeration: nextExaggeration });
+}
+
 function selectedFeatureFilter() {
   return state.selectedId ? ["==", ["get", "id"], state.selectedId] : ["==", ["get", "id"], "__none__"];
 }
@@ -575,6 +677,228 @@ function syncSelectedFeatureLayers() {
   ["water-edge", "water-labels"].forEach((layerId) => {
     if (map.getLayer(layerId)) map.setFilter(layerId, selectedWaterFilter);
   });
+}
+
+function tryAddArtSurfaceLayers() {
+  if (state.artSurfaceLayersAdding || state.artSurfaceLayersAdded || !state.domainLayersAdded || !state.artSurfaces) return;
+
+  state.artSurfaceLayersAdding = true;
+  try {
+    addArtSurfaceLayers();
+    state.artSurfaceLayersAdded = true;
+  } catch (error) {
+    if (!String(error?.message || error).includes("Style is not done loading")) {
+      console.warn("Art surface layers are waiting for the map style.", error);
+    }
+  } finally {
+    state.artSurfaceLayersAdding = false;
+  }
+}
+
+function addArtSurfaceLayers() {
+  registerSurfaceTextures();
+
+  if (!map.getSource("art-surfaces")) {
+    map.addSource("art-surfaces", {
+      type: "geojson",
+      data: state.artSurfaces,
+    });
+  }
+
+  const beforeLayer = map.getLayer("region-fill") ? "region-fill" : undefined;
+
+  addLayerIfMissing(
+    {
+      id: "art-surface-fill",
+      type: "fill",
+      source: "art-surfaces",
+      filter: ["!=", ["get", "surface_class"], "built"],
+      layout: {
+        "fill-sort-key": ["get", "priority"],
+      },
+      paint: {
+        "fill-color": SURFACE_COLOR_EXPRESSION,
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0.02, 13, 0.08, 16, 0.18],
+      },
+    },
+    beforeLayer,
+  );
+
+  addLayerIfMissing(
+    {
+      id: "art-surface-texture",
+      type: "fill",
+      source: "art-surfaces",
+      filter: ["!=", ["get", "surface_class"], "built"],
+      layout: {
+        "fill-sort-key": ["get", "priority"],
+      },
+      paint: {
+        "fill-pattern": SURFACE_PATTERN_EXPRESSION,
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 11, 0.025, 14, 0.08, 16, 0.16],
+      },
+    },
+    beforeLayer,
+  );
+
+  addLayerIfMissing(
+    {
+      id: "art-built-fill",
+      type: "fill",
+      source: "art-surfaces",
+      minzoom: 13,
+      filter: ["==", ["get", "surface_class"], "built"],
+      layout: {
+        "fill-sort-key": ["get", "priority"],
+      },
+      paint: {
+        "fill-color": "#8a7d68",
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0.04, 15, 0.13, 17, 0.24],
+      },
+    },
+    beforeLayer,
+  );
+
+  addLayerIfMissing(
+    {
+      id: "art-built-texture",
+      type: "fill",
+      source: "art-surfaces",
+      minzoom: 14,
+      filter: ["==", ["get", "surface_class"], "built"],
+      layout: {
+        "fill-sort-key": ["get", "priority"],
+      },
+      paint: {
+        "fill-pattern": "surface-built",
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0.025, 16, 0.12],
+      },
+    },
+    beforeLayer,
+  );
+}
+
+function addLayerIfMissing(layer, beforeLayer) {
+  if (map.getLayer(layer.id)) return;
+  map.addLayer(layer, beforeLayer);
+}
+
+function registerSurfaceTextures() {
+  if (map.hasImage("surface-tea")) return;
+  [
+    ["surface-tea", drawTeaTexture],
+    ["surface-woodland", drawWoodlandTexture],
+    ["surface-park", drawParkTexture],
+    ["surface-grass", drawGrassTexture],
+    ["surface-field", drawFieldTexture],
+    ["surface-built", drawBuiltTexture],
+    ["surface-open", drawOpenTexture],
+  ].forEach(([id, draw]) => {
+    map.addImage(id, createSurfaceTexture(draw), { pixelRatio: 1 });
+  });
+}
+
+function createSurfaceTexture(draw) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, 64, 64);
+  draw(ctx);
+  return ctx.getImageData(0, 0, 64, 64);
+}
+
+function drawTeaTexture(ctx) {
+  ctx.strokeStyle = "rgba(232, 222, 154, 0.48)";
+  ctx.lineWidth = 1.15;
+  for (let y = -18; y < 82; y += 9) {
+    ctx.beginPath();
+    ctx.moveTo(-8, y);
+    ctx.bezierCurveTo(18, y + 6, 36, y - 6, 72, y + 3);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(55, 86, 48, 0.34)";
+  for (let x = -24; x < 88; x += 17) {
+    ctx.beginPath();
+    ctx.moveTo(x, -8);
+    ctx.lineTo(x + 18, 72);
+    ctx.stroke();
+  }
+}
+
+function drawWoodlandTexture(ctx) {
+  ctx.fillStyle = "rgba(35, 62, 42, 0.42)";
+  for (let i = 0; i < 42; i += 1) {
+    const x = (i * 19) % 64;
+    const y = (i * 29) % 64;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 1.7 + (i % 3) * 0.7, 1.1 + (i % 4) * 0.4, i, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawParkTexture(ctx) {
+  ctx.strokeStyle = "rgba(238, 229, 181, 0.34)";
+  ctx.lineWidth = 1.2;
+  for (let y = 5; y < 68; y += 14) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.quadraticCurveTo(18, y - 7, 34, y);
+    ctx.quadraticCurveTo(48, y + 6, 64, y - 2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "rgba(67, 103, 56, 0.22)";
+  for (let i = 0; i < 18; i += 1) ctx.fillRect((i * 23) % 64, (i * 17) % 64, 2, 2);
+}
+
+function drawGrassTexture(ctx) {
+  ctx.strokeStyle = "rgba(91, 100, 56, 0.25)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 42; i += 1) {
+    const x = (i * 11) % 64;
+    const y = (i * 31) % 64;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 3);
+    ctx.lineTo(x + 3, y - 3);
+    ctx.stroke();
+  }
+}
+
+function drawFieldTexture(ctx) {
+  ctx.strokeStyle = "rgba(239, 224, 158, 0.32)";
+  ctx.lineWidth = 1;
+  for (let x = -8; x < 72; x += 10) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + 24, 64);
+    ctx.stroke();
+  }
+  for (let y = 8; y < 64; y += 16) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(64, y - 4);
+    ctx.stroke();
+  }
+}
+
+function drawBuiltTexture(ctx) {
+  ctx.fillStyle = "rgba(72, 61, 52, 0.2)";
+  for (let y = 0; y < 64; y += 12) {
+    for (let x = (y / 12) % 2 ? 7 : 0; x < 64; x += 15) {
+      ctx.fillRect(x, y + 2, 8, 5);
+    }
+  }
+}
+
+function drawOpenTexture(ctx) {
+  ctx.strokeStyle = "rgba(255, 239, 190, 0.23)";
+  ctx.lineWidth = 1;
+  for (let y = 4; y < 64; y += 12) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(64, y + 4);
+    ctx.stroke();
+  }
 }
 
 function clickedDomainFeature(point) {
@@ -1109,4 +1433,3 @@ function updateCameraState() {
   if (!camera) return;
   camera.textContent = `${map.getZoom().toFixed(1)}z · ${Math.round(map.getPitch())}°`;
 }
-
